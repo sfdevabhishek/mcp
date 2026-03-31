@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Salesforce MCP Server", version="1.0.0")
 
 
-# ✅ ROOT (for uptime robot - FAST response)
+# -------------------------------
+# ✅ ROOT (Uptime + Render warm)
+# -------------------------------
 @app.get("/")
 def home():
     return JSONResponse(
@@ -19,19 +21,31 @@ def home():
     )
 
 
-# ✅ 🔥 ADD THIS (VERY IMPORTANT - fixes 405 HEAD issue)
 @app.head("/")
 def health_check():
     return JSONResponse(
-        content={"status": "ok"},
+        content={},
         headers={"Cache-Control": "no-store"}
     )
 
 
-# OPTIONAL (extra safe ping)
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+# -------------------------------
+# 🔥 CRITICAL FIX (Agentforce needs this)
+# -------------------------------
+@app.head("/mcp")
+async def mcp_head():
+    return JSONResponse(
+        content={},
+        headers={"Cache-Control": "no-store"}
+    )
+
+
+@app.get("/mcp")
+async def mcp_get():
+    return JSONResponse(
+        content={"status": "mcp alive"},
+        headers={"Cache-Control": "no-store"}
+    )
 
 
 # -------------------------------
@@ -46,9 +60,6 @@ async def mcp_handler(request: Request):
         req_type = body.get("type")
         req_id = body.get("id")
 
-        # -------------------------------
-        # VALIDATION
-        # -------------------------------
         if not req_type or req_id is None:
             return JSONResponse(
                 status_code=400,
