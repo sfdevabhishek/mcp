@@ -10,9 +10,10 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Salesforce MCP Server", version="1.0.0")
 
 
+# ✅ FAST ROOT ENDPOINT (for uptime robot)
 @app.get("/")
 def home():
-    return {"message": "MCP Server Running ✅"}
+    return {"status": "alive"}
 
 
 @app.post("/mcp")
@@ -33,11 +34,12 @@ async def mcp_handler(request: Request):
                 content={
                     "type": "error",
                     "error": {"message": "Missing required fields"}
-                }
+                },
+                headers={"Cache-Control": "no-store"}
             )
 
         # -------------------------------
-        # 1️⃣ INITIALIZE (FIXED)
+        # 1️⃣ INITIALIZE (FINAL FIX)
         # -------------------------------
         if req_type == "initialize":
             return JSONResponse(
@@ -56,7 +58,8 @@ async def mcp_handler(request: Request):
                             "version": "1.0.0"
                         }
                     }
-                }
+                },
+                headers={"Cache-Control": "no-store"}
             )
 
         # -------------------------------
@@ -109,7 +112,8 @@ async def mcp_handler(request: Request):
                             }
                         ]
                     }
-                }
+                },
+                headers={"Cache-Control": "no-store"}
             )
 
         # -------------------------------
@@ -141,7 +145,8 @@ async def mcp_handler(request: Request):
                                 }
                             ]
                         }
-                    }
+                    },
+                    headers={"Cache-Control": "no-store"}
                 )
 
             except Exception as e:
@@ -150,7 +155,8 @@ async def mcp_handler(request: Request):
                         "id": req_id,
                         "type": "error",
                         "error": {"message": str(e)}
-                    }
+                    },
+                    headers={"Cache-Control": "no-store"}
                 )
 
         # -------------------------------
@@ -162,7 +168,8 @@ async def mcp_handler(request: Request):
                     "id": req_id,
                     "type": "error",
                     "error": {"message": f"Invalid type: {req_type}"}
-                }
+                },
+                headers={"Cache-Control": "no-store"}
             )
 
     except Exception as e:
@@ -172,5 +179,6 @@ async def mcp_handler(request: Request):
             content={
                 "type": "error",
                 "error": {"message": str(e)}
-            }
+            },
+            headers={"Cache-Control": "no-store"}
         )
