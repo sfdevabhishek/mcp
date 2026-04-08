@@ -72,45 +72,72 @@ async def mcp_handler(request: Request):
             })
 
         elif method == "tools/list":
-            return JSONResponse(content={
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {
-                    "tools": [
-                        {
-                            "name": "createLead",
-                            "description": "Create a new Lead in Salesforce",
-                            "inputSchema": {
-                                "type": "object",
-                                "properties": {
-                                    "first_name": {"type": "string"},
-                                    "last_name": {"type": "string"},
-                                    "email": {"type": "string"},
-                                    "company": {"type": "string"}
-                                },
-                                "required": ["first_name", "last_name", "email", "company"]
-                            }
-                        }
-                    ]
+    return JSONResponse(content={
+        "jsonrpc": "2.0",
+        "id": req_id,
+        "result": {
+            "tools": [
+                {
+                    "name": "createLead",
+                    "description": "Create a new Lead in Salesforce",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "first_name": {"type": "string"},
+                            "last_name": {"type": "string"},
+                            "email": {"type": "string"},
+                            "company": {"type": "string"}
+                        },
+                        "required": ["first_name", "last_name", "email", "company"]
+                    }
+                },
+                {
+                    "name": "createPermissionSet",
+                    "description": "Create a new Permission Set in Salesforce",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "label": {"type": "string"},
+                            "api_name": {"type": "string"},
+                            "description": {"type": "string"}
+                        },
+                        "required": ["label", "api_name"]
+                    }
+                },
+                {
+                    "name": "assignPermissionSet",
+                    "description": "Assign a Permission Set to a Salesforce User",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "user_id": {"type": "string"},
+                            "permission_set_name": {"type": "string"}
+                        },
+                        "required": ["user_id", "permission_set_name"]
+                    }
                 }
-            })
+            ]
+        }
+    })
 
         elif method == "tools/call":
-            tool_name = body.get("params", {}).get("name")
-            args = body.get("params", {}).get("arguments", {})
-
+            tool_name = params.get("name")
+            args = params.get("arguments", {})
             if tool_name == "createLead":
                 result = create_lead(**args)
-            else:
-                result = f"Unknown tool: {tool_name}"
-
-            return JSONResponse(content={
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {
-                    "content": [{"type": "text", "text": str(result)}]
-                }
-            })
+                elif tool_name == "createPermissionSet":
+                    result = create_permission_set(**args)
+                    elif tool_name == "assignPermissionSet":
+                        result = assign_permission_set(**args)
+                        else:
+                            result = f"Unknown tool: {tool_name}"
+                            return JSONResponse(content={
+                                "jsonrpc": "2.0",
+                                "id": req_id,
+                                "result": {
+                                    "content": [{"type": "text", "text": str(result)}]
+                                    }
+                                    })
 
         else:
             return JSONResponse(content={
