@@ -57,7 +57,7 @@ async def mcp_handler(request: Request):
         body = await request.json()
         logger.info(f"Incoming MCP request: {body}")
 
-        req_type = body.get("type")
+        req_type = body.get("method")
         req_id = body.get("id")
 
         if not req_type or req_id is None:
@@ -74,25 +74,25 @@ async def mcp_handler(request: Request):
         # INITIALIZE
         # -------------------------------
         if req_type == "initialize":
-            return JSONResponse(
-                content={
-                    "id": req_id,
-                    "type": "result",
-                    "result": {
-                        "protocolVersion": "2024-11-05",
-                        "capabilities": {
-                            "tools": {
-                                "listChanged": False
-                            }
-                        },
-                        "serverInfo": {
-                            "name": "salesforce-mcp-server",
-                            "version": "1.0.0"
-                        }
+    return JSONResponse(
+        content={
+            "jsonrpc": "2.0",
+            "id": req_id,
+            "result": {
+                "protocolVersion": "2025-06-18",
+                "capabilities": {
+                    "tools": {
+                        "listChanged": False
                     }
                 },
-                headers={"Cache-Control": "no-store"}
-            )
+                "serverInfo": {
+                    "name": "salesforce-mcp-server",
+                    "version": "1.0.0"
+                }
+            }
+        },
+        headers={"Cache-Control": "no-store"}
+    )
 
         # -------------------------------
         # TOOLS LIST
