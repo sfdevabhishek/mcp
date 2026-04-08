@@ -90,7 +90,7 @@ def assign_permission_set(username, permission_set_name):
 # -------------------------------
 # 🔹 CREATE PERMISSION SET (SOAP)
 # -------------------------------
-def create_permission_set(ps_name, ps_label):
+def create_permission_set(api_name, label):
     try:
         token = get_access_token()
         base = get_instance_url()
@@ -108,8 +108,8 @@ def create_permission_set(ps_name, ps_label):
   <env:Body>
     <createMetadata xmlns="http://soap.sforce.com/2006/04/metadata">
       <metadata xsi:type="PermissionSet" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-        <fullName>{ps_name}</fullName>
-        <label>{ps_label}</label>
+        <fullName>{api_name}</fullName>
+        <label>{label}</label>
         <userPermissions>
           <enabled>true</enabled>
           <name>ApiEnabled</name>

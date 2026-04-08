@@ -110,10 +110,10 @@ async def mcp_handler(request: Request):
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
-                                    "user_id": {"type": "string"},
+                                    "username": {"type": "string"},
                                     "permission_set_name": {"type": "string"}
                                 },
-                                "required": ["user_id", "permission_set_name"]
+                                "required": ["username", "permission_set_name"]
                             }
                         }
                     ]
