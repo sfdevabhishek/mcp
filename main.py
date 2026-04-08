@@ -1,6 +1,6 @@
 import logging
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from salesforce import create_lead
 
 logging.basicConfig(level=logging.INFO)
@@ -37,8 +37,8 @@ async def mcp_handler(request: Request):
 
         # ✅ FIX 1: Handle notifications (no id, no response needed)
         if req_id is None:
-            logger.info(f"Received notification: {method} — ignoring (no response needed)")
-            return JSONResponse(status_code=200, content={})
+            logger.info(f"Received notification: {method} — ignoring")
+            return Response(status_code=204)
 
         if method is None:
             return JSONResponse(
