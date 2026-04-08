@@ -57,7 +57,7 @@ async def mcp_handler(request: Request):
         body = await request.json()
         logger.info(f"Incoming MCP request: {body}")
 
-        req_type = body.get("type")
+        req_type = body.get("type") or body.get("method")
         req_id = body.get("id")
 
         if not req_type or req_id is None:
