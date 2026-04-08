@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
-from salesforce import create_lead
+from salesforce import create_lead, assign_permission_set, create_permission_set
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,9 +33,10 @@ async def mcp_handler(request: Request):
         logger.info(f"Incoming MCP request: {body}")
 
         method = body.get("method")
-        req_id = body.get("id")  # ⚠️ Can be None for notifications
+        req_id = body.get("id")
+        params = body.get("params", {})
 
-        # ✅ FIX 1: Handle notifications (no id, no response needed)
+        # Handle notifications (no id)
         if req_id is None:
             logger.info(f"Received notification: {method} — ignoring")
             return Response(status_code=204)
@@ -46,13 +47,13 @@ async def mcp_handler(request: Request):
                 content={"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request"}}
             )
 
-        # ✅ FIX 2: Correct protocolVersion
         if method == "initialize":
+            client_version = params.get("protocolVersion", "2024-11-05")
             return JSONResponse(content={
                 "jsonrpc": "2.0",
                 "id": req_id,
                 "result": {
-                    "protocolVersion": "2024-11-05",  # ✅ Valid version
+                    "protocolVersion": client_version,
                     "capabilities": {
                         "tools": {"listChanged": False}
                     },
@@ -63,7 +64,6 @@ async def mcp_handler(request: Request):
                 }
             })
 
-        # ✅ FIX 3: Handle ping
         elif method == "ping":
             return JSONResponse(content={
                 "jsonrpc": "2.0",
@@ -72,72 +72,74 @@ async def mcp_handler(request: Request):
             })
 
         elif method == "tools/list":
-    return JSONResponse(content={
-        "jsonrpc": "2.0",
-        "id": req_id,
-        "result": {
-            "tools": [
-                {
-                    "name": "createLead",
-                    "description": "Create a new Lead in Salesforce",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "first_name": {"type": "string"},
-                            "last_name": {"type": "string"},
-                            "email": {"type": "string"},
-                            "company": {"type": "string"}
+            return JSONResponse(content={
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "tools": [
+                        {
+                            "name": "createLead",
+                            "description": "Create a new Lead in Salesforce",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "first_name": {"type": "string"},
+                                    "last_name": {"type": "string"},
+                                    "email": {"type": "string"},
+                                    "company": {"type": "string"}
+                                },
+                                "required": ["first_name", "last_name", "email", "company"]
+                            }
                         },
-                        "required": ["first_name", "last_name", "email", "company"]
-                    }
-                },
-                {
-                    "name": "createPermissionSet",
-                    "description": "Create a new Permission Set in Salesforce",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "label": {"type": "string"},
-                            "api_name": {"type": "string"},
-                            "description": {"type": "string"}
+                        {
+                            "name": "createPermissionSet",
+                            "description": "Create a new Permission Set in Salesforce",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "label": {"type": "string"},
+                                    "api_name": {"type": "string"},
+                                    "description": {"type": "string"}
+                                },
+                                "required": ["label", "api_name"]
+                            }
                         },
-                        "required": ["label", "api_name"]
-                    }
-                },
-                {
-                    "name": "assignPermissionSet",
-                    "description": "Assign a Permission Set to a Salesforce User",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "user_id": {"type": "string"},
-                            "permission_set_name": {"type": "string"}
-                        },
-                        "required": ["user_id", "permission_set_name"]
-                    }
+                        {
+                            "name": "assignPermissionSet",
+                            "description": "Assign a Permission Set to a Salesforce User",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "user_id": {"type": "string"},
+                                    "permission_set_name": {"type": "string"}
+                                },
+                                "required": ["user_id", "permission_set_name"]
+                            }
+                        }
+                    ]
                 }
-            ]
-        }
-    })
+            })
 
         elif method == "tools/call":
             tool_name = params.get("name")
             args = params.get("arguments", {})
+
             if tool_name == "createLead":
                 result = create_lead(**args)
-                elif tool_name == "createPermissionSet":
-                    result = create_permission_set(**args)
-                    elif tool_name == "assignPermissionSet":
-                        result = assign_permission_set(**args)
-                        else:
-                            result = f"Unknown tool: {tool_name}"
-                            return JSONResponse(content={
-                                "jsonrpc": "2.0",
-                                "id": req_id,
-                                "result": {
-                                    "content": [{"type": "text", "text": str(result)}]
-                                    }
-                                    })
+            elif tool_name == "createPermissionSet":
+                result = create_permission_set(**args)
+            elif tool_name == "assignPermissionSet":
+                result = assign_permission_set(**args)
+            else:
+                result = f"Unknown tool: {tool_name}"
+
+            return JSONResponse(content={
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "content": [{"type": "text", "text": str(result)}]
+                }
+            })
 
         else:
             return JSONResponse(content={
