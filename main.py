@@ -57,7 +57,7 @@ async def mcp_handler(request: Request):
         body = await request.json()
         logger.info(f"Incoming MCP request: {body}")
 
-        req_type = body.get("method")
+        req_type = body.get("type")
         req_id = body.get("id")
 
         if not req_type or req_id is None:
@@ -65,7 +65,7 @@ async def mcp_handler(request: Request):
                 status_code=400,
                 content={
                     "type": "error",
-                    "error": {"message": "Missing required fields"}
+                    "error": {"message": "Invalid body type"}
                 },
                 headers={"Cache-Control": "no-store"}
             )
