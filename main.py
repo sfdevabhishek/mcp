@@ -73,26 +73,27 @@ async def mcp_handler(request: Request):
         # -------------------------------
         # INITIALIZE
         # -------------------------------
+        # -------------------------------
         if req_type == "initialize":
-    return JSONResponse(
-        content={
-            "jsonrpc": "2.0",
-            "id": req_id,
-            "result": {
-                "protocolVersion": "2025-06-18",
-                "capabilities": {
-                    "tools": {
-                        "listChanged": False
-                    }
-                },
-                "serverInfo": {
-                    "name": "salesforce-mcp-server",
-                    "version": "1.0.0"
-                }
-            }
-        },
-        headers={"Cache-Control": "no-store"}
-    )
+            return JSONResponse(
+                content={
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {
+                        "protocolVersion": "2025-06-18",
+                        "capabilities": {
+                            "tools": {
+                                "listChanged": False
+                                }
+                                },
+                                "serverInfo": {
+                                    "name": "salesforce-mcp-server",
+                                    "version": "1.0.0"
+                                    }
+                                    }
+                                    },
+                                    headers={"Cache-Control": "no-store"}
+                                    )
 
         # -------------------------------
         # TOOLS LIST
