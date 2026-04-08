@@ -57,24 +57,29 @@ async def mcp_handler(request: Request):
         body = await request.json()
         logger.info(f"Incoming MCP request: {body}")
 
-        req_type = body.get("type") or body.get("method")
+        method = body.get("method")
         req_id = body.get("id")
+        params = body.get("params", {})
 
-        if not req_type or req_id is None:
+        if method is None or req_id is None:
             return JSONResponse(
                 status_code=400,
                 content={
-                    "type": "error",
-                    "error": {"message": "Invalid body type"}
-                },
-                headers={"Cache-Control": "no-store"}
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {
+                        "code": -32600,
+                        "message": "Invalid Request"
+                    }
+                }
             )
 
-        # -------------------------------
+        # -------------------------
         # INITIALIZE
-        # -------------------------------
-        # -------------------------------
-        if req_type == "initialize":
+        # -------------------------
+
+        if method == "initialize":
+
             return JSONResponse(
                 content={
                     "jsonrpc": "2.0",
@@ -84,25 +89,26 @@ async def mcp_handler(request: Request):
                         "capabilities": {
                             "tools": {
                                 "listChanged": False
-                                }
-                                },
-                                "serverInfo": {
-                                    "name": "salesforce-mcp-server",
-                                    "version": "1.0.0"
-                                    }
-                                    }
-                                    },
-                                    headers={"Cache-Control": "no-store"}
-                                    )
+                            }
+                        },
+                        "serverInfo": {
+                            "name": "salesforce-mcp-server",
+                            "version": "1.0.0"
+                        }
+                    }
+                }
+            )
 
-        # -------------------------------
+        # -------------------------
         # TOOLS LIST
-        # -------------------------------
-        elif req_type == "tools/list":
+        # -------------------------
+
+        elif method == "tools/list":
+
             return JSONResponse(
                 content={
+                    "jsonrpc": "2.0",
                     "id": req_id,
-                    "type": "result",
                     "result": {
                         "tools": [
                             {
@@ -116,102 +122,76 @@ async def mcp_handler(request: Request):
                                         "email": {"type": "string"},
                                         "company": {"type": "string"}
                                     },
-                                    "required": ["first_name", "last_name", "email", "company"]
-                                }
-                            },
-                            {
-                                "name": "assignPermissionSet",
-                                "description": "Assign permission set to user",
-                                "inputSchema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "username": {"type": "string"},
-                                        "permission_set_name": {"type": "string"}
-                                    },
-                                    "required": ["username", "permission_set_name"]
-                                }
-                            },
-                            {
-                                "name": "createPermissionSet",
-                                "description": "Create Salesforce Permission Set",
-                                "inputSchema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "ps_name": {"type": "string"},
-                                        "ps_label": {"type": "string"}
-                                    },
-                                    "required": ["ps_name", "ps_label"]
+                                    "required": [
+                                        "first_name",
+                                        "last_name",
+                                        "email",
+                                        "company"
+                                    ]
                                 }
                             }
                         ]
                     }
-                },
-                headers={"Cache-Control": "no-store"}
+                }
             )
 
-        # -------------------------------
-        # TOOLS CALL
-        # -------------------------------
-        elif req_type == "tools/call":
-            tool_name = body.get("name")
-            args = body.get("arguments", {})
+        # -------------------------
+        # TOOL CALL
+        # -------------------------
 
-            try:
-                if tool_name == "createLead":
-                    result = create_lead(**args)
-                elif tool_name == "assignPermissionSet":
-                    result = assign_permission_set(**args)
-                elif tool_name == "createPermissionSet":
-                    result = create_permission_set(**args)
-                else:
-                    result = f"Unknown tool: {tool_name}"
+        elif method == "tools/call":
 
-                return JSONResponse(
-                    content={
-                        "id": req_id,
-                        "type": "result",
-                        "result": {
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "text": result
-                                }
-                            ]
-                        }
-                    },
-                    headers={"Cache-Control": "no-store"}
-                )
+            tool_name = params.get("name")
+            args = params.get("arguments", {})
 
-            except Exception as e:
-                return JSONResponse(
-                    content={
-                        "id": req_id,
-                        "type": "error",
-                        "error": {"message": str(e)}
-                    },
-                    headers={"Cache-Control": "no-store"}
-                )
+            if tool_name == "createLead":
+                result = create_lead(**args)
 
-        # -------------------------------
-        # INVALID TYPE
-        # -------------------------------
+            else:
+                result = "Unknown tool"
+
+            return JSONResponse(
+                content={
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": str(result)
+                            }
+                        ]
+                    }
+                }
+            )
+
+        # -------------------------
+        # UNKNOWN METHOD
+        # -------------------------
+
         else:
             return JSONResponse(
                 content={
+                    "jsonrpc": "2.0",
                     "id": req_id,
-                    "type": "error",
-                    "error": {"message": f"Invalid type: {req_type}"}
-                },
-                headers={"Cache-Control": "no-store"}
+                    "error": {
+                        "code": -32601,
+                        "message": "Method not found"
+                    }
+                }
             )
 
     except Exception as e:
         logger.error(str(e))
+
         return JSONResponse(
             status_code=500,
             content={
-                "type": "error",
-                "error": {"message": str(e)}
-            },
-            headers={"Cache-Control": "no-store"}
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32603,
+                    "message": str(e)
+                }
+            }
         )
