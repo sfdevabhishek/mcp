@@ -136,3 +136,70 @@ def create_permission_set(api_name, label):
 
     except Exception as e:
         return f"❌ Error creating Permission Set: {str(e)}"
+
+        # -------------------------------
+# 🔹 CREATE CASE
+# -------------------------------
+def create_case(subject, description, priority, origin, account_name=None):
+    try:
+        token = get_access_token()
+        base = get_instance_url()
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+
+        data = {
+            "Subject": subject,
+            "Description": description,
+            "Priority": priority,   # Low, Medium, High
+            "Origin": origin        # Phone, Email, Web
+        }
+
+        # Optionally link to an Account
+        if account_name:
+            account_query = f"{base}/services/data/v61.0/query?q=SELECT+Id+FROM+Account+WHERE+Name='{account_name}'"
+            account_res = requests.get(account_query, headers=headers).json()
+            if account_res.get("records"):
+                data["AccountId"] = account_res["records"][0]["Id"]
+
+        url = f"{base}/services/data/v61.0/sobjects/Case/"
+        response = requests.post(url, json=data, headers=headers)
+
+        if response.status_code in [200, 201]:
+            case_id = response.json().get("id")
+            return f"✅ Case created successfully. Case ID: {case_id}"
+        else:
+            return f"❌ Failed to create case: {response.text}"
+
+    except Exception as e:
+        return f"❌ Error creating case: {str(e)}"
+
+
+# -------------------------------
+# 🔹 UPDATE CASE STATUS
+# -------------------------------
+def update_case_status(case_id, status):
+    try:
+        token = get_access_token()
+        base = get_instance_url()
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+
+        # Valid statuses: New, Working, Escalated, Closed
+        url = f"{base}/services/data/v61.0/sobjects/Case/{case_id}"
+        data = {"Status": status}
+
+        response = requests.patch(url, json=data, headers=headers)
+
+        if response.status_code == 204:
+            return f"✅ Case {case_id} status updated to '{status}' successfully"
+        else:
+            return f"❌ Failed to update case: {response.text}"
+
+    except Exception as e:
+        return f"❌ Error updating case: {str(e)}"

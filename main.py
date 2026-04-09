@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
-from salesforce import create_lead, assign_permission_set, create_permission_set
+from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_case_status
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -115,7 +115,34 @@ async def mcp_handler(request: Request):
                                 },
                                 "required": ["username", "permission_set_name"]
                             }
-                        }
+                        },
+                        {
+    "name": "createCase",
+    "description": "Create a new support case in Salesforce",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "subject": {"type": "string", "description": "Short summary of the issue"},
+            "description": {"type": "string", "description": "Detailed description of the issue"},
+            "priority": {"type": "string", "description": "Priority: Low, Medium or High"},
+            "origin": {"type": "string", "description": "Origin: Phone, Email or Web"},
+            "account_name": {"type": "string", "description": "Account name to link case to (optional)"}
+        },
+        "required": ["subject", "description", "priority", "origin"]
+    }
+},
+{
+    "name": "updateCaseStatus",
+    "description": "Update the status of an existing Salesforce Case",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "case_id": {"type": "string", "description": "Salesforce Case ID (e.g. 5001000000000001)"},
+            "status": {"type": "string", "description": "New status: New, Working, Escalated or Closed"}
+        },
+        "required": ["case_id", "status"]
+    }
+}
                     ]
                 }
             })
