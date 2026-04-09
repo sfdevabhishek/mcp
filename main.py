@@ -157,9 +157,12 @@ async def mcp_handler(request: Request):
                 result = create_permission_set(**args)
             elif tool_name == "assignPermissionSet":
                 result = assign_permission_set(**args)
+            elif tool_name == "createCase":
+                result = create_case(**args)
+            elif tool_name == "updateCaseStatus":
+                result = update_case_status(**args)
             else:
                 result = f"Unknown tool: {tool_name}"
-
             return JSONResponse(content={
                 "jsonrpc": "2.0",
                 "id": req_id,
