@@ -139,8 +139,7 @@ def create_permission_set(api_name, label):
 
         # -------------------------------
 # 🔹 CREATE CASE
-# -------------------------------
-def create_case(subject, description, priority, origin, account_name=None):
+def create_case(subject, description, priority, origin):
     try:
         token = get_access_token()
         base = get_instance_url()
@@ -156,15 +155,6 @@ def create_case(subject, description, priority, origin, account_name=None):
             "Priority": priority,
             "Origin": origin
         }
-
-        # ✅ FIX: check it's a dict before calling .get()
-        if account_name:
-            account_query = f"{base}/services/data/v61.0/query?q=SELECT+Id+FROM+Account+WHERE+Name='{account_name}'"
-            account_res = requests.get(account_query, headers=headers).json()
-            if isinstance(account_res, dict) and account_res.get("records"):
-                data["AccountId"] = account_res["records"][0]["Id"]
-            else:
-                return f"❌ Account '{account_name}' not found or query failed: {account_res}"
 
         url = f"{base}/services/data/v61.0/sobjects/Case/"
         response = requests.post(url, json=data, headers=headers)

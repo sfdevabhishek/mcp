@@ -126,20 +126,19 @@ async def mcp_handler(request: Request):
                             }
                         },
                         {
-                            "name": "createCase",
-                            "description": "Create a new support case in Salesforce",
-                            "inputSchema": {
-                                "type": "object",
-                                "properties": {
-                                    "subject": {"type": "string", "description": "Short summary of the issue"},
-                                    "description": {"type": "string", "description": "Detailed description of the issue"},
-                                    "priority": {"type": "string", "description": "Priority: Low, Medium or High"},
-                                    "origin": {"type": "string", "description": "Origin: Phone, Email or Web"},
-                                    "account_name": {"type": "string", "description": "Account name to link case to (optional)"}
-                                },
-                                "required": ["subject", "description", "priority", "origin"]
-                            }
-                        },
+    "name": "createCase",
+    "description": "Create a new support case in Salesforce",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "subject": {"type": "string", "description": "Short summary of the issue"},
+            "description": {"type": "string", "description": "Detailed description of the issue"},
+            "priority": {"type": "string", "description": "Priority: Low, Medium or High"},
+            "origin": {"type": "string", "description": "Origin: Phone, Email or Web"}
+        },
+        "required": ["subject", "description", "priority", "origin"]
+    }
+},
                         {
                             "name": "updateCaseStatus",
                             "description": "Update the status of an existing Salesforce Case",
