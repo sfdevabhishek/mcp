@@ -98,7 +98,7 @@ async def mcp_handler(request: Request):
                                 "type": "object",
                                 "properties": {
                                     "label": {"type": "string"},
-                                    "api_name": {"type": "string"},
+                                    "api_name": {"type": "string"}
                                 },
                                 "required": ["label", "api_name"]
                             }
