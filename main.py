@@ -137,7 +137,7 @@ async def mcp_handler(request: Request):
     "inputSchema": {
         "type": "object",
         "properties": {
-            "case_id": {"type": "string", "description": "Salesforce Case ID (e.g. 5001000000000001)"},
+            "case_id": {"type": "string", "description": "Salesforce recordId. Run the Identify record by name action to get the recordId"},
             "status": {"type": "string", "description": "New status: New, Working, Escalated or Closed"}
         },
         "required": ["case_id", "status"]
