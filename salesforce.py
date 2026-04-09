@@ -153,16 +153,18 @@ def create_case(subject, description, priority, origin, account_name=None):
         data = {
             "Subject": subject,
             "Description": description,
-            "Priority": priority,   # Low, Medium, High
-            "Origin": origin        # Phone, Email, Web
+            "Priority": priority,
+            "Origin": origin
         }
 
-        # Optionally link to an Account
+        # ✅ FIX: check it's a dict before calling .get()
         if account_name:
             account_query = f"{base}/services/data/v61.0/query?q=SELECT+Id+FROM+Account+WHERE+Name='{account_name}'"
             account_res = requests.get(account_query, headers=headers).json()
-            if account_res.get("records"):
+            if isinstance(account_res, dict) and account_res.get("records"):
                 data["AccountId"] = account_res["records"][0]["Id"]
+            else:
+                return f"❌ Account '{account_name}' not found or query failed: {account_res}"
 
         url = f"{base}/services/data/v61.0/sobjects/Case/"
         response = requests.post(url, json=data, headers=headers)
