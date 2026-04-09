@@ -107,10 +107,10 @@ async def mcp_handler(request: Request):
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
-                                    "ps_name": {"type": "string", "description": "API name (no spaces)"},
-                                    "ps_label": {"type": "string", "description": "Display label"}
+                                    "api_name": {"type": "string", "description": "API name (no spaces)"},
+                                    "label": {"type": "string", "description": "Display label"}
                                 },
-                                "required": ["ps_name", "ps_label"]
+                                "required": ["api_name", "label"]
                             }
                         },
                         {
