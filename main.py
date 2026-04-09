@@ -1,4 +1,7 @@
 import logging
+import httpx
+import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_case_status
@@ -6,7 +9,24 @@ from salesforce import create_lead, assign_permission_set, create_permission_set
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Salesforce MCP Server", version="1.0.0")
+
+# ✅ Keep-alive ping every 5 minutes
+async def keep_alive():
+    while True:
+        await asyncio.sleep(300)
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.get("https://mcp-nj3p.onrender.com/")
+            logger.info("✅ Keep-alive ping sent")
+        except Exception as e:
+            logger.warning(f"⚠️ Keep-alive failed: {e}")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    asyncio.create_task(keep_alive())
+    yield
+
+app = FastAPI(title="Salesforce MCP Server", version="1.0.0", lifespan=lifespan)
 
 
 @app.get("/")
@@ -36,7 +56,6 @@ async def mcp_handler(request: Request):
         req_id = body.get("id")
         params = body.get("params", {})
 
-        # Handle notifications (no id)
         if req_id is None:
             logger.info(f"Received notification: {method} — ignoring")
             return Response(status_code=204)
@@ -54,22 +73,13 @@ async def mcp_handler(request: Request):
                 "id": req_id,
                 "result": {
                     "protocolVersion": client_version,
-                    "capabilities": {
-                        "tools": {"listChanged": False}
-                    },
-                    "serverInfo": {
-                        "name": "salesforce-mcp-server",
-                        "version": "1.0.0"
-                    }
+                    "capabilities": {"tools": {"listChanged": False}},
+                    "serverInfo": {"name": "salesforce-mcp-server", "version": "1.0.0"}
                 }
             })
 
         elif method == "ping":
-            return JSONResponse(content={
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {}
-            })
+            return JSONResponse(content={"jsonrpc": "2.0", "id": req_id, "result": {}})
 
         elif method == "tools/list":
             return JSONResponse(content={
@@ -97,10 +107,10 @@ async def mcp_handler(request: Request):
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
-                                    "label": {"type": "string"},
-                                    "api_name": {"type": "string"}
+                                    "ps_name": {"type": "string", "description": "API name (no spaces)"},
+                                    "ps_label": {"type": "string", "description": "Display label"}
                                 },
-                                "required": ["label", "api_name"]
+                                "required": ["ps_name", "ps_label"]
                             }
                         },
                         {
@@ -109,39 +119,39 @@ async def mcp_handler(request: Request):
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
-                                    "username": {"type": "string"},
-                                    "permission_set_name": {"type": "string"}
+                                    "username": {"type": "string", "description": "Salesforce username (email format)"},
+                                    "permission_set_name": {"type": "string", "description": "API name of the permission set"}
                                 },
                                 "required": ["username", "permission_set_name"]
                             }
                         },
                         {
-    "name": "createCase",
-    "description": "Create a new support case in Salesforce",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "subject": {"type": "string", "description": "Short summary of the issue"},
-            "description": {"type": "string", "description": "Detailed description of the issue"},
-            "priority": {"type": "string", "description": "Priority: Low, Medium or High"},
-            "origin": {"type": "string", "description": "Origin: Phone, Email or Web"},
-            "account_name": {"type": "string", "description": "Account name to link case to (optional)"}
-        },
-        "required": ["subject", "description", "priority", "origin"]
-    }
-},
-{
-    "name": "updateCaseStatus",
-    "description": "Update the status of an existing Salesforce Case",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "case_id": {"type": "string", "description": "Salesforce recordId. Run the Identify record by name action to get the recordId"},
-            "status": {"type": "string", "description": "New status: New, Working, Escalated or Closed"}
-        },
-        "required": ["case_id", "status"]
-    }
-}
+                            "name": "createCase",
+                            "description": "Create a new support case in Salesforce",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "subject": {"type": "string", "description": "Short summary of the issue"},
+                                    "description": {"type": "string", "description": "Detailed description of the issue"},
+                                    "priority": {"type": "string", "description": "Priority: Low, Medium or High"},
+                                    "origin": {"type": "string", "description": "Origin: Phone, Email or Web"},
+                                    "account_name": {"type": "string", "description": "Account name to link case to (optional)"}
+                                },
+                                "required": ["subject", "description", "priority", "origin"]
+                            }
+                        },
+                        {
+                            "name": "updateCaseStatus",
+                            "description": "Update the status of an existing Salesforce Case",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "case_id": {"type": "string", "description": "Salesforce Case ID"},
+                                    "status": {"type": "string", "description": "New status: New, Working, Escalated or Closed"}
+                                },
+                                "required": ["case_id", "status"]
+                            }
+                        }
                     ]
                 }
             })
@@ -162,12 +172,11 @@ async def mcp_handler(request: Request):
                 result = update_case_status(**args)
             else:
                 result = f"Unknown tool: {tool_name}"
+
             return JSONResponse(content={
                 "jsonrpc": "2.0",
                 "id": req_id,
-                "result": {
-                    "content": [{"type": "text", "text": str(result)}]
-                }
+                "result": {"content": [{"type": "text", "text": str(result)}]}
             })
 
         else:
