@@ -34,11 +34,9 @@ def authenticate():
     instance_url = response["instance_url"]
 
 def get_access_token():
-    if not access_token:
-        authenticate()
+    authenticate()      # ✅ Always fetch fresh token
     return access_token
 
 def get_instance_url():
-    if not instance_url:
-        authenticate()
+    authenticate()      # ✅ Always fetch fresh token
     return instance_url
