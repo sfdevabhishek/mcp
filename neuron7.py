@@ -27,7 +27,7 @@ def get_session_id():
     return session_id
 
 
-def get_messages():
+def get_messages(query):
     sId = "15062c58-52e5-4cdd-b369-72ecd4907ce9"
     token = n7_auth_token()  # Salesforce access token
     # Salesforce access token
@@ -38,7 +38,7 @@ def get_messages():
         "Content-Type": "application/json"
     }
     payload = {
-        "query": "Hello",
+        "query": query,
         "userName": "Jhon"
     }
     response = requests.post(
