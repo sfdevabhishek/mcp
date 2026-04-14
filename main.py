@@ -127,19 +127,19 @@ async def mcp_handler(request: Request):
                             }
                         },
                         {
-    "name": "createCase",
-    "description": "Create a new support case in Salesforce",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "subject": {"type": "string", "description": "Short summary of the issue"},
-            "description": {"type": "string", "description": "Detailed description of the issue"},
-            "priority": {"type": "string", "description": "Priority: Low, Medium or High"},
-            "origin": {"type": "string", "description": "Origin: Phone, Email or Web"}
-        },
-        "required": ["subject", "description", "priority", "origin"]
-    }
-},
+                            "name": "createCase",
+                            "description": "Create a new support case in Salesforce",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "subject": {"type": "string", "description": "Short summary of the issue"},
+                                    "description": {"type": "string", "description": "Detailed description of the issue"},
+                                    "priority": {"type": "string", "description": "Priority: Low, Medium or High"},
+                                    "origin": {"type": "string", "description": "Origin: Phone, Email or Web"}
+                                },
+                                "required": ["subject", "description", "priority", "origin"]
+                            }
+                        },
                         {
                             "name": "updateCaseStatus",
                             "description": "Update the status of an existing Salesforce Case",
@@ -151,23 +151,21 @@ async def mcp_handler(request: Request):
                                 },
                                 "required": ["case_id", "status"]
                             }
+                        },
+                        {
+                            "name": "getMessages",
+                            "description": "Send a query and get a bot response from N7 messaging service",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "query": {"type": "string", "description": "The message or question to send to the bot"}
+                                },
+                                "required": ["query"]
+                            }
                         }
-                    ]
+                    ]  # ← tools list closes here
                 }
-            },
-            {
-    "name": "getMessages",
-    "description": "Send a query and get a bot response from N7 messaging service",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "query": {"type": "string", "description": "The message or question to send to the bot"}
-        },
-        "required": ["query"]
-    }
-}
-
-            )
+            })  # ← JSONResponse closes here
 
         elif method == "tools/call":
             tool_name = params.get("name")
