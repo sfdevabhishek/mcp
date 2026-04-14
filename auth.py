@@ -9,6 +9,9 @@ CLIENT_ID = os.getenv("SALESFORCE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("SALESFORCE_CLIENT_SECRET")
 USERNAME = os.getenv("SALESFORCE_USERNAME")
 PASSWORD = os.getenv("SALESFORCE_PASSWORD")
+N7USERNAME= os.getenv("NEURON7_USERNAME")
+N7PASSWORD = os.getenv("NEURON7_PASSWORD")
+N7URL = os.getenv("NEURON7_URL")
 
 access_token = None
 instance_url = None
@@ -40,3 +43,24 @@ def get_access_token():
 def get_instance_url():
     authenticate()      # ✅ Always fetch fresh token
     return instance_url
+
+def n7_auth_token() -> str:
+    n7authurl = N7URL+"security/user/authenticate"
+    payload = {
+        "userName": N7USERNAME,
+        "password": N7PASSWORD
+    }
+
+    response = requests.post(
+        n7authurl,
+        json=payload,
+        headers={"Content-Type": "application/json"}
+    )
+    response.raise_for_status()
+
+    token = response.headers.get("Authorization")
+
+    if not token:
+        raise ValueError("Authorization token not found in response headers.")
+
+    return token

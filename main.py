@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_case_status
+from neuron7 import get_messages
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -153,7 +154,20 @@ async def mcp_handler(request: Request):
                         }
                     ]
                 }
-            })
+            },
+            {
+    "name": "getMessages",
+    "description": "Send a query and get a bot response from N7 messaging service",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string", "description": "The message or question to send to the bot"}
+        },
+        "required": ["query"]
+    }
+}
+
+            )
 
         elif method == "tools/call":
             tool_name = params.get("name")
@@ -169,6 +183,8 @@ async def mcp_handler(request: Request):
                 result = create_case(**args)
             elif tool_name == "updateCaseStatus":
                 result = update_case_status(**args)
+            elif tool_name == "getMessages":
+                result = get_messages(**args)
             else:
                 result = f"Unknown tool: {tool_name}"
 
