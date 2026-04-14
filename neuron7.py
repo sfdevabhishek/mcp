@@ -1,4 +1,5 @@
 import requests
+import os
 from auth import n7_auth_token
 
 N7URL = os.getenv("NEURON7_URL")
