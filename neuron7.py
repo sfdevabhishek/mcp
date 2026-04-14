@@ -5,7 +5,7 @@ N7URL = os.getenv("NEURON7_URL")
 
 sessionId = None
 def get_session_id():
-    token = get_auth_token()  # Salesforce access token
+    token = n7_auth_token()  # Salesforce access token
     N7Chaturl = N7URL+"api/v1/chat-session"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -28,7 +28,7 @@ def get_session_id():
 
 def get_messages():
     sId = "15062c58-52e5-4cdd-b369-72ecd4907ce9"
-    token = get_auth_token()  # Salesforce access token
+    token = n7_auth_token()  # Salesforce access token
     # Salesforce access token
     N7MessageUrl = N7URL+"api/v2/intelligent-search"
     headers = {
