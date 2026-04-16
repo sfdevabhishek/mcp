@@ -172,14 +172,9 @@ async def mcp_handler(request: Request):
         "properties": {
             "summary": {"type": "string", "description": "Short title of the Jira issue"},
             "description": {"type": "string", "description": "Detailed description of the issue"},
-            "project_key": {"type": "string", "description": "Jira project key e.g. DEV, SUPPORT"},
-            "issue_type": {"type": "string", "description": "Issue type: Task, Bug, Story (default: Task)"},
-            "priority": {"type": "string", "description": "Priority: Lowest, Low, Medium, High, Highest (default: Medium)"},
-            "assignee_email": {"type": "string", "description": "Email of the assignee (optional)"},
-            "labels": {"type": "array", "items": {"type": "string"}, "description": "List of labels (optional)"},
             "sf_case_id": {"type": "string", "description": "Salesforce Case ID to link (optional)"}
         },
-        "required": ["summary", "description", "project_key"]
+        "required": ["summary", "description","sf_case_id" ]
     }
 }
                     ]  # ← tools list closes here
