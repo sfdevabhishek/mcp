@@ -198,7 +198,7 @@ async def mcp_handler(request: Request):
                 result = assign_permission_set(**args)
             elif tool_name == "createCase":
                 result = create_case(**args)
-            elif tool_name == "updateCaseStatus":
+            elif tool_name == "attachjiraissuewithcase":
                 result = update_case_status(**args)
             elif tool_name == "getMessages":
                 result = get_messages(**args)
