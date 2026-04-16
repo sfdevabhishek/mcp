@@ -184,7 +184,7 @@ def update_case_status(case_id, jiraissueurl):
 
         # Valid statuses: New, Working, Escalated, Closed
         url = f"{base}/services/data/v61.0/sobjects/Case/{case_id}"
-        data = {""Jira_Issue_URL__C": jiraissueurl}
+        data = {"Jira_Issue_URL__C": jiraissueurl}
 
         response = requests.patch(url, json=data, headers=headers)
 
