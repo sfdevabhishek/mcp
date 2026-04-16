@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_case_status
 from neuron7 import get_messages
-
+from jira import create_jira_issue
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -162,7 +162,25 @@ async def mcp_handler(request: Request):
                                 },
                                 "required": ["query"]
                             }
-                        }
+                        },
+                        {
+    "name": "createJiraIssue",
+    "description": "Create a new issue in Jira",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "summary": {"type": "string", "description": "Short title of the Jira issue"},
+            "description": {"type": "string", "description": "Detailed description of the issue"},
+            "project_key": {"type": "string", "description": "Jira project key e.g. DEV, SUPPORT"},
+            "issue_type": {"type": "string", "description": "Issue type: Task, Bug, Story (default: Task)"},
+            "priority": {"type": "string", "description": "Priority: Lowest, Low, Medium, High, Highest (default: Medium)"},
+            "assignee_email": {"type": "string", "description": "Email of the assignee (optional)"},
+            "labels": {"type": "array", "items": {"type": "string"}, "description": "List of labels (optional)"},
+            "sf_case_id": {"type": "string", "description": "Salesforce Case ID to link (optional)"}
+        },
+        "required": ["summary", "description", "project_key"]
+    }
+}
                     ]  # ← tools list closes here
                 }
             })  # ← JSONResponse closes here
@@ -183,6 +201,8 @@ async def mcp_handler(request: Request):
                 result = update_case_status(**args)
             elif tool_name == "getMessages":
                 result = get_messages(**args)
+            elif tool_name == "createJiraIssue":
+                result = create_jira_issue(**args) 
             else:
                 result = f"Unknown tool: {tool_name}"
 
