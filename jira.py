@@ -12,7 +12,7 @@ JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN")
 def create_jira_issue(
     summary: str,
     description: str,
-    project_key: str,
+    project_key: str = "KAN",
     issue_type: str = "Task",
     priority: str = "Medium",
     assignee_email: str = None,

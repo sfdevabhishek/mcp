@@ -153,8 +153,7 @@ def create_case(subject, description, priority, origin,jiraissueurl):
             "Subject": subject,
             "Description": description,
             "Priority": priority,
-            "Origin": origin,
-            "Jira_Issue_URL__c": jiraissueurl
+            "Origin": origin
         }
 
         url = f"{base}/services/data/v61.0/sobjects/Case/"

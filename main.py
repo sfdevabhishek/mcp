@@ -135,22 +135,22 @@ async def mcp_handler(request: Request):
                                     "subject": {"type": "string", "description": "Short summary of the issue"},
                                     "description": {"type": "string", "description": "Detailed description of the issue"},
                                     "priority": {"type": "string", "description": "Priority: Low, Medium or High"},
-                                    "origin": {"type": "string", "description": "Origin: Phone, Email or Web"},
-                                    "jiraissueurl": {"type": "string", "description": "Url of the created jira issue"}
+                                    "origin": {"type": "string", "description": "Origin: Phone, Email or Web"}
                                 },
                                 "required": ["subject", "description", "priority", "origin", "jiraissueurl"]
                             }
                         },
                         {
-                            "name": "updateCaseStatus",
-                            "description": "Update the status of an existing Salesforce Case",
+                            "name": "attachjiraissuewithcase",
+                            "description": "Attach the jira issue url with created case.",
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
                                     "case_id": {"type": "string", "description": "Salesforce Case ID"},
-                                    "status": {"type": "string", "description": "New status: New, Working, Escalated or Closed"}
+                                    "jiraissueurl": {"type": "string", "description": "Url of the created jira issue"}
+
                                 },
-                                "required": ["case_id", "status"]
+                                "required": ["case_id", "jiraissueurl"]
                             }
                         },
                         {
