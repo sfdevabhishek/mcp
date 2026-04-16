@@ -139,7 +139,7 @@ def create_permission_set(api_name, label):
 
         # -------------------------------
 # 🔹 CREATE CASE
-def create_case(subject, description, priority, origin,jiraissueurl):
+def create_case(subject, description, priority, origin):
     try:
         token = get_access_token()
         base = get_instance_url()
@@ -172,7 +172,7 @@ def create_case(subject, description, priority, origin,jiraissueurl):
 # -------------------------------
 # 🔹 UPDATE CASE STATUS
 # -------------------------------
-def update_case_status(case_id, status):
+def update_case_status(case_id, jiraissueurl):
     try:
         token = get_access_token()
         base = get_instance_url()
@@ -184,12 +184,12 @@ def update_case_status(case_id, status):
 
         # Valid statuses: New, Working, Escalated, Closed
         url = f"{base}/services/data/v61.0/sobjects/Case/{case_id}"
-        data = {"Status": status}
+        data = {""Jira_Issue_URL__C": jiraissueurl}
 
         response = requests.patch(url, json=data, headers=headers)
 
         if response.status_code == 204:
-            return f"✅ Case {case_id} status updated to '{status}' successfully"
+            return f"✅ The Url of created issue of jira has been updated on the case."
         else:
             return f"❌ Failed to update case: {response.text}"
 
