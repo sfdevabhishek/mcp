@@ -136,7 +136,7 @@ async def mcp_handler(request: Request):
                                     "description": {"type": "string", "description": "Detailed description of the issue"},
                                     "priority": {"type": "string", "description": "Priority: Low, Medium or High"},
                                     "origin": {"type": "string", "description": "Origin: Phone, Email or Web"},
-                                    "jiraissueurl": {"type": "string", "description": "Url of the created jira issue}
+                                    "jiraissueurl": {"type": "string", "description": "Url of the created jira issue"}
                                 },
                                 "required": ["subject", "description", "priority", "origin"]
                             }
