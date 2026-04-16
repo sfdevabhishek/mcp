@@ -139,7 +139,7 @@ def create_permission_set(api_name, label):
 
         # -------------------------------
 # 🔹 CREATE CASE
-def create_case(subject, description, priority, origin):
+def create_case(subject, description, priority, origin,jiraissueurl):
     try:
         token = get_access_token()
         base = get_instance_url()
@@ -153,7 +153,8 @@ def create_case(subject, description, priority, origin):
             "Subject": subject,
             "Description": description,
             "Priority": priority,
-            "Origin": origin
+            "Origin": origin,
+            "Jira_Issue_URL__c": jiraissueurl
         }
 
         url = f"{base}/services/data/v61.0/sobjects/Case/"
