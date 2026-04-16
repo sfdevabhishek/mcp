@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TOKEN_URL = os.getenv("SALESFORCE_TOKEN_URL")
+BASE_URL = os.getenv("SALESFORCE_BASE_URL")
 CLIENT_ID = os.getenv("SALESFORCE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("SALESFORCE_CLIENT_SECRET")
 USERNAME = os.getenv("SALESFORCE_USERNAME")
@@ -18,9 +18,9 @@ instance_url = None
 
 def authenticate():
     global access_token, instance_url
-
+    auth_url = f"{BASE_URL}/services/oauth2/token"
     response = requests.post(
-        TOKEN_URL,
+        auth_url,
         data={
             "grant_type": "password",
             "client_id": CLIENT_ID,

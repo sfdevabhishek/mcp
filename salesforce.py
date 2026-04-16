@@ -170,9 +170,9 @@ def create_case(subject, description, priority, origin):
 
 
 # -------------------------------
-# 🔹 UPDATE CASE STATUS
+# 🔹 UPDATE JIRA URL ON CASE
 # -------------------------------
-def update_case_status(case_id, jiraissueurl):
+def update_jiraurl(case_id, jiraissueurl):
     try:
         token = get_access_token()
         base = get_instance_url()
@@ -195,3 +195,33 @@ def update_case_status(case_id, jiraissueurl):
 
     except Exception as e:
         return f"❌ Error updating case: {str(e)}"
+
+
+
+def get_salesforce_users():
+    access_token = get_access_token()
+    base = get_instance_url()
+    soql = "SELECT Id, Name, Email, Username FROM User WHERE IsActive = true ORDER BY Name ASC"
+    url  = f"{base}/services/data/v60.0/query"
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type":  "application/json"
+    }
+
+    response = requests.get(url, headers=headers, params={"q": soql})
+    response.raise_for_status()
+
+    records = response.json().get("records", [])
+
+    users = [
+        {
+            "id":       rec["Id"],
+            "name":     rec["Name"],
+            "email":    rec["Email"],
+            "username": rec["Username"]
+        }
+        for rec in records
+    ]
+
+    return {"total": len(users), "users": users}

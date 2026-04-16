@@ -4,7 +4,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
-from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_case_status
+from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_jiraurl, get_salesforce_users
 from neuron7 import get_messages
 from jira import create_jira_issue
 logging.basicConfig(level=logging.INFO)
@@ -89,7 +89,7 @@ async def mcp_handler(request: Request):
                 "result": {
                     "tools": [
                         {
-                            "name": "createLead",
+                            "name": "Create Lead",
                             "description": "Create a new Lead in Salesforce",
                             "inputSchema": {
                                 "type": "object",
@@ -103,7 +103,7 @@ async def mcp_handler(request: Request):
                             }
                         },
                         {
-                            "name": "createPermissionSet",
+                            "name": "Create Permission Set",
                             "description": "Create a new Permission Set in Salesforce",
                             "inputSchema": {
                                 "type": "object",
@@ -115,7 +115,7 @@ async def mcp_handler(request: Request):
                             }
                         },
                         {
-                            "name": "assignPermissionSet",
+                            "name": "Assign Permission Set",
                             "description": "Assign a Permission Set to a Salesforce User",
                             "inputSchema": {
                                 "type": "object",
@@ -127,7 +127,7 @@ async def mcp_handler(request: Request):
                             }
                         },
                         {
-                            "name": "createCase",
+                            "name": "Create Case",
                             "description": "Create a new support case in Salesforce",
                             "inputSchema": {
                                 "type": "object",
@@ -141,8 +141,8 @@ async def mcp_handler(request: Request):
                             }
                         },
                         {
-                            "name": "attachjiraissuewithcase",
-                            "description": "Attach the jira issue url with created case.",
+                            "name": "Attach jira issue case",
+                            "description": "Attach the jira issue url with created case. Always call this tool Immediately after creating the jira issue",
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
@@ -154,7 +154,7 @@ async def mcp_handler(request: Request):
                             }
                         },
                         {
-                            "name": "getMessages",
+                            "name": "Provide Solutions",
                             "description": "Send a query and get a bot response from N7 messaging service",
                             "inputSchema": {
                                 "type": "object",
@@ -165,8 +165,8 @@ async def mcp_handler(request: Request):
                             }
                         },
                         {
-    "name": "createJiraIssue",
-    "description": "Create a new issue in Jira",
+    "name": "Create Jira Issue",
+    "description": "Create jira issues. Always call this tool Immediately after creating the salesforce case record",
     "inputSchema": {
         "type": "object",
         "properties": {
@@ -175,6 +175,15 @@ async def mcp_handler(request: Request):
             "sf_case_id": {"type": "string", "description": "Salesforce Case ID to link (optional)"}
         },
         "required": ["summary", "description","sf_case_id" ]
+    }
+},
+{
+    "name": "Get Salesforce Users",
+    "description": "Retrieve all active Salesforce users. Always call this tool FIRST before assigning a permission set so the customer can select the correct user.",
+    "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
     }
 }
                     ]  # ← tools list closes here
@@ -185,20 +194,22 @@ async def mcp_handler(request: Request):
             tool_name = params.get("name")
             args = params.get("arguments", {})
 
-            if tool_name == "createLead":
+            if tool_name == "Create Lead":
                 result = create_lead(**args)
-            elif tool_name == "createPermissionSet":
+            elif tool_name == "Create Permission Set":
                 result = create_permission_set(**args)
-            elif tool_name == "assignPermissionSet":
+            elif tool_name == "Assign Permission Set":
                 result = assign_permission_set(**args)
-            elif tool_name == "createCase":
+            elif tool_name == "Create Case":
                 result = create_case(**args)
-            elif tool_name == "attachjiraissuewithcase":
-                result = update_case_status(**args)
-            elif tool_name == "getMessages":
+            elif tool_name == "Attach jira issue case":
+                result = update_jiraurl(**args)
+            elif tool_name == "Provide Solutions":
                 result = get_messages(**args)
-            elif tool_name == "createJiraIssue":
-                result = create_jira_issue(**args) 
+            elif tool_name == "Create Jira Issue":
+                result = create_jira_issue(**args)
+            elif tool_name == "Get Salesforce Users":
+                result = get_salesforce_users(**args) 
             else:
                 result = f"Unknown tool: {tool_name}"
 
