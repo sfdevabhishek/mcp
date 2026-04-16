@@ -137,7 +137,7 @@ async def mcp_handler(request: Request):
                                     "priority": {"type": "string", "description": "Priority: Low, Medium or High"},
                                     "origin": {"type": "string", "description": "Origin: Phone, Email or Web"}
                                 },
-                                "required": ["subject", "description", "priority", "origin", "jiraissueurl"]
+                                "required": ["subject", "description", "priority", "origin"]
                             }
                         },
                         {
