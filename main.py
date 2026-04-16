@@ -141,7 +141,7 @@ async def mcp_handler(request: Request):
                             }
                         },
                         {
-                            "name": "Attach jira issue case",
+                            "name": "Attach jira issue with case",
                             "description": "Attach the jira issue url with created case. Always call this tool Immediately after creating the jira issue",
                             "inputSchema": {
                                 "type": "object",
@@ -202,7 +202,7 @@ async def mcp_handler(request: Request):
                 result = assign_permission_set(**args)
             elif tool_name == "Create Case":
                 result = create_case(**args)
-            elif tool_name == "Attach jira issue case":
+            elif tool_name == "Attach jira issue with case":
                 result = update_jiraurl(**args)
             elif tool_name == "Provide Solutions":
                 result = get_messages(**args)
