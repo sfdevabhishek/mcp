@@ -1,13 +1,11 @@
 import requests
-from requests.auth import HTTPBasicAuth
 import json
 import os
 import urllib3
+from auth import get_jira_auth
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 JIRA_BASE_URL = os.environ.get("JIRA_BASE_URL")
-JIRA_EMAIL    = os.environ.get("JIRA_EMAIL")
-JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN")
 
 def create_jira_issue(
     summary: str,
@@ -19,7 +17,7 @@ def create_jira_issue(
     labels: list = None,
     sf_case_id: str = None,
 ) -> dict:
-    auth = HTTPBasicAuth(JIRA_EMAIL, JIRA_API_TOKEN)
+    auth = get_jira_auth()
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
@@ -99,36 +97,36 @@ def _get_account_id(email: str, auth: HTTPBasicAuth) -> str | None:
     users = response.json() if response.ok else []
     return users[0]["accountId"] if users else None
 
-def update_jira_issue_status(issue_key: str, status: str):
-    access_token = get_access_token()
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
+def update_jira_issue_status(issue_key: str, status: str) -> dict:
+    auth = get_jira_auth()   # ✅ from auth.py
 
-    # Step 1 — Get available transitions for the issue
+    headers = {"Content-Type": "application/json"}
     transitions_url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/transitions"
-    transitions_response = requests.get(transitions_url, headers=headers)
+
+    # Step 1 — Get available transitions
+    transitions_response = requests.get(transitions_url, auth=auth, headers=headers)
     transitions_response.raise_for_status()
     transitions = transitions_response.json().get("transitions", [])
-    # Step 2 — Match the requested status to a transition (case-insensitive)
+
+    # Step 2 — Match requested status (case-insensitive)
     transition_id = None
     for t in transitions:
         if t["to"]["name"].lower() == status.lower():
             transition_id = t["id"]
             break
+
     if not transition_id:
         available = [t["to"]["name"] for t in transitions]
         return {
-            "status": "error",
+            "status":  "error",
             "message": f"Status '{status}' not found. Available transitions: {available}"
         }
-    # Step 3 — Apply the transition
-    payload = {"transition": {"id": transition_id}}
-    response = requests.post(transitions_url, headers=headers, json=payload)
+
+    # Step 3 — Apply transition
+    response = requests.post(transitions_url, auth=auth, headers=headers, json={"transition": {"id": transition_id}})
     response.raise_for_status()
 
     return {
-        "status": "success",
+        "status":  "success",
         "message": f"Jira issue {issue_key} moved to '{status}' successfully."
     }

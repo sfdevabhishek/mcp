@@ -1,6 +1,8 @@
 import os
 import requests
 from dotenv import load_dotenv
+from requests.auth import HTTPBasicAuth
+
 
 load_dotenv()
 
@@ -12,10 +14,14 @@ PASSWORD = os.getenv("SALESFORCE_PASSWORD")
 N7USERNAME= os.getenv("NEURON7_USERNAME")
 N7PASSWORD = os.getenv("NEURON7_PASSWORD")
 N7URL = os.getenv("NEURON7_URL")
+JIRA_EMAIL     = os.environ.get("JIRA_EMAIL")
+JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN")
+
 
 access_token = None
 instance_url = None
 
+# Salesforce Authentication Method
 def authenticate():
     global access_token, instance_url
     auth_url = f"{BASE_URL}/services/oauth2/token"
@@ -44,6 +50,7 @@ def get_instance_url():
     authenticate()      # ✅ Always fetch fresh token
     return instance_url
 
+# Neuron 7 Authentication Method
 def n7_auth_token() -> str:
     n7authurl = N7URL+"security/user/authenticate"
     payload = {
@@ -64,3 +71,12 @@ def n7_auth_token() -> str:
         raise ValueError("Authorization token not found in response headers.")
 
     return token
+
+# Jira Authentication Method
+
+def get_jira_auth() -> HTTPBasicAuth:
+    """
+    Returns HTTPBasicAuth for Jira API calls.
+    Use this in all Jira tools instead of repeating credentials.
+    """
+    return HTTPBasicAuth(JIRA_EMAIL, JIRA_API_TOKEN)
