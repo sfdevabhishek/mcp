@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_jiraurl, get_salesforce_users
 from neuron7 import get_messages
-from jira import create_jira_issue, update_jira_issue_status
+from jira import create_jira_issue, update_jira_issue_status, get_jira_issue
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -197,6 +197,17 @@ async def mcp_handler(request: Request):
         },
         "required": ["issue_key", "status"]
     }
+},
+{
+    "name": "Get Jira Issue Details",
+    "description": "Fetch the details of an existing Jira issue by its key. Use this to check the current status, assignee, priority, and description of a Jira ticket.",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string", "description": "Jira issue key e.g. ENG-101"}
+        },
+        "required": ["issue_key"]
+    }
 }
                     ]  # ← tools list closes here
                 }
@@ -223,7 +234,9 @@ async def mcp_handler(request: Request):
             elif tool_name == "Get Salesforce Users":
                 result = get_salesforce_users(**args)
             elif tool_name == "Update Jira Issue Status":
-                result = update_jira_issue_status(**args) 
+                result = update_jira_issue_status(**args)
+            elif tool_name == "Get Jira Issue Details":
+                result = get_jira_issue(**args) 
             else:
                 result = f"Unknown tool: {tool_name}"
 

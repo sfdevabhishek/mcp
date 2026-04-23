@@ -130,3 +130,35 @@ def update_jira_issue_status(issue_key: str, status: str) -> dict:
         "status":  "success",
         "message": f"Jira issue {issue_key} moved to '{status}' successfully."
     }
+
+def get_jira_issue(issue_key: str) -> dict:
+    """
+    Fetches the details of a Jira issue by its key.
+    e.g. "ENG-101"
+    """
+    auth = get_jira_auth()
+
+    headers = {"Content-Type": "application/json"}
+    url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}"
+
+    response = requests.get(url, auth=auth, headers=headers)
+    response.raise_for_status()
+
+    data = response.json()
+    fields = data.get("fields", {})
+
+    return {
+        "status":      "success",
+        "issue_key":   data["key"],
+        "issue_url":   f"{JIRA_BASE_URL}/browse/{data['key']}",
+        "summary":     fields.get("summary"),
+        "description": fields.get("description"),
+        "issue_type":  fields.get("issuetype", {}).get("name"),
+        "priority":    fields.get("priority", {}).get("name"),
+        "issue_status": fields.get("status", {}).get("name"),
+        "assignee":    fields.get("assignee", {}).get("displayName") if fields.get("assignee") else None,
+        "reporter":    fields.get("reporter", {}).get("displayName") if fields.get("reporter") else None,
+        "created_at":  fields.get("created"),
+        "updated_at":  fields.get("updated"),
+        "labels":      fields.get("labels", [])
+    }
