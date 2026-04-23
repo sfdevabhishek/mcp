@@ -225,3 +225,28 @@ def get_salesforce_users():
     ]
 
     return {"total": len(users), "users": users}
+
+def update_case_status(case_id: str, status: str) -> dict:
+    """
+    Updates the status of an existing Salesforce Case.
+    e.g. "New", "Working", "Escalated", "Closed"
+    """
+    access_token = get_access_token()
+    base = get_instance_url()
+
+    url = f"{base}/services/data/v60.0/sobjects/Case/{case_id}"
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type":  "application/json"
+    }
+
+    payload = {"Status": status}
+
+    response = requests.patch(url, headers=headers, json=payload)
+    response.raise_for_status()
+
+    return {
+        "status":  "success",
+        "message": f"Salesforce Case {case_id} status updated to '{status}' successfully."
+    }

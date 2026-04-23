@@ -208,6 +208,18 @@ async def mcp_handler(request: Request):
         },
         "required": ["issue_key"]
     }
+},
+{
+    "name": "Update Case Status",
+    "description": "Update the status of an existing Salesforce Case. Use this to close or update a case when an incident is resolved.",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "case_id": {"type": "string", "description": "Salesforce Case ID e.g. 5001X000ABC"},
+            "status":  {"type": "string", "description": "New status: New, Working, Escalated, Closed"}
+        },
+        "required": ["case_id", "status"]
+    }
 }
                     ]  # ← tools list closes here
                 }
@@ -236,7 +248,9 @@ async def mcp_handler(request: Request):
             elif tool_name == "Update Jira Issue Status":
                 result = update_jira_issue_status(**args)
             elif tool_name == "Get Jira Issue Details":
-                result = get_jira_issue(**args) 
+                result = get_jira_issue(**args)
+            elif tool_name == "Update Case Status":
+                result = update_case_status(**args)  
             else:
                 result = f"Unknown tool: {tool_name}"
 
