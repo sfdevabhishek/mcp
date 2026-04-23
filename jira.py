@@ -162,3 +162,35 @@ def get_jira_issue(issue_key: str) -> dict:
         "updated_at":  fields.get("updated"),
         "labels":      fields.get("labels", [])
     }
+
+def add_jira_comment(issue_key: str, comment: str) -> dict:
+    auth = get_jira_auth()
+    headers = {"Content-Type": "application/json"}
+    url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/comment"
+    payload = {
+        "body": {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": comment
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+    response = requests.post(url, auth=auth, headers=headers, json=payload)
+    response.raise_for_status()
+    data = response.json()
+    return {
+        "status":     "success",
+        "comment_id": data.get("id"),
+        "issue_key":  issue_key,
+        "message":    f"Comment added to Jira issue {issue_key} successfully."
+    }

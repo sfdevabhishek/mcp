@@ -4,9 +4,9 @@ import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
-from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_jiraurl, get_salesforce_users
+from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_jiraurl, get_salesforce_users, update_case_status
 from neuron7 import get_messages
-from jira import create_jira_issue, update_jira_issue_status, get_jira_issue
+from jira import create_jira_issue, update_jira_issue_status, get_jira_issue, add_jira_comment
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -220,6 +220,18 @@ async def mcp_handler(request: Request):
         },
         "required": ["case_id", "status"]
     }
+},
+{
+    "name": "Add Jira Comment",
+    "description": "Add a comment to an existing Jira issue. Use this to post updates, progress notes, or resolution details directly on a Jira ticket.",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string", "description": "Jira issue key e.g. KAN-42"},
+            "comment":   {"type": "string", "description": "The comment text to post on the Jira issue"}
+        },
+        "required": ["issue_key", "comment"]
+    }
 }
                     ]  # ← tools list closes here
                 }
@@ -250,7 +262,9 @@ async def mcp_handler(request: Request):
             elif tool_name == "Get Jira Issue Details":
                 result = get_jira_issue(**args)
             elif tool_name == "Update Case Status":
-                result = update_case_status(**args)  
+                result = update_case_status(**args)
+            elif tool_name == "Add Jira Comment":
+                result = add_jira_comment(**args)  
             else:
                 result = f"Unknown tool: {tool_name}"
 
