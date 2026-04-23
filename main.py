@@ -7,11 +7,11 @@ from fastapi.responses import JSONResponse, Response
 from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_jiraurl, get_salesforce_users, update_case_status
 from neuron7 import get_messages
 from jira import create_jira_issue, update_jira_issue_status, get_jira_issue, add_jira_comment, search_jira_issues, assign_jira_issue, get_jira_users, update_jira_issue, get_jira_projects, get_jira_comments
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# ✅ Keep-alive ping every 5 minutes
 async def keep_alive():
     while True:
         await asyncio.sleep(300)
@@ -148,7 +148,6 @@ async def mcp_handler(request: Request):
                                 "properties": {
                                     "case_id": {"type": "string", "description": "Salesforce Case ID"},
                                     "jiraissueurl": {"type": "string", "description": "Url of the created jira issue"}
-
                                 },
                                 "required": ["case_id", "jiraissueurl"]
                             }
@@ -165,150 +164,150 @@ async def mcp_handler(request: Request):
                             }
                         },
                         {
-    "name": "Create Jira Issue",
-    "description": "Create jira issues. Always call this tool Immediately after creating the salesforce case record",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "summary": {"type": "string", "description": "Short title of the Jira issue"},
-            "description": {"type": "string", "description": "Detailed description of the issue"},
-            "sf_case_id": {"type": "string", "description": "Salesforce Case ID to link (optional)"}
-        },
-        "required": ["summary", "description","sf_case_id" ]
-    }
-},
-{
-    "name": "Get Salesforce Users",
-    "description": "Retrieve all active Salesforce users. Always call this tool FIRST before assigning a permission set so the customer can select the correct user.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {},
-        "required": []
-    }
-},
-{
-    "name": "Update Jira Issue Status",
-    "description": "Update the status of an existing Jira issue. Use this to transition a Jira ticket to In Progress, In Review, Done, or To Do.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "issue_key": {"type": "string", "description": "Jira issue key e.g. ENG-101"},
-            "status": {"type": "string", "description": "Target status: To Do, In Progress, In Review, Done"}
-        },
-        "required": ["issue_key", "status"]
-    }
-},
-{
-    "name": "Get Jira Issue Details",
-    "description": "Fetch the details of an existing Jira issue by its key. Use this to check the current status, assignee, priority, and description of a Jira ticket.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "issue_key": {"type": "string", "description": "Jira issue key e.g. ENG-101"}
-        },
-        "required": ["issue_key"]
-    }
-},
-{
-    "name": "Update Case Status",
-    "description": "Update the status of an existing Salesforce Case. Use this to close or update a case when an incident is resolved.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "case_id": {"type": "string", "description": "Salesforce Case ID e.g. 5001X000ABC"},
-            "status":  {"type": "string", "description": "New status: New, Working, Escalated, Closed"}
-        },
-        "required": ["case_id", "status"]
-    }
-},
-{
-    "name": "Add Jira Comment",
-    "description": "Add a comment to an existing Jira issue. Use this to post updates, progress notes, or resolution details directly on a Jira ticket.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "issue_key": {"type": "string", "description": "Jira issue key e.g. KAN-42"},
-            "comment":   {"type": "string", "description": "The comment text to post on the Jira issue"}
-        },
-        "required": ["issue_key", "comment"]
-    }
-},
-{
-    "name": "Retrieve Jira Issues",
-    "description": "Search for Jira issues using filters like project, status, priority, assignee, or keyword. Use this to find existing tickets before creating new ones or to get an overview of open issues.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "project_key":     {"type": "string", "description": "Jira project key e.g. KAN"},
-            "status":          {"type": "string", "description": "Issue status: To Do, In Progress, In Review, Done"},
-            "priority":        {"type": "string", "description": "Priority: Low, Medium, High, Critical"},
-            "assignee_email":  {"type": "string", "description": "Email of the assignee e.g. john@acme.com"},
-            "keyword":         {"type": "string", "description": "Search keyword in summary or description"},
-            "max_results":     {"type": "integer", "description": "Maximum number of results to return (default: 10)"}
-        },
-        "required": []
-    }
-},
-{
-    "name": "Assign Jira Issue",
-    "description": "Assign an existing Jira issue to a user by their email address. Use this after searchJiraIssues to assign the right ticket to the right engineer.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "issue_key":       {"type": "string", "description": "Jira issue key e.g. KAN-42"},
-            "assignee_email":  {"type": "string", "description": "Email of the user to assign e.g. john@acme.com"}
-        },
-        "required": ["issue_key", "assignee_email"]
-    }
-},
-{
-    "name": "Retrieve Jira Users",
-    "description": "Retrieve all active Jira users. Always call this tool FIRST before assigning a Jira issue so the customer can select the correct user to assign.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {},
-        "required": []
-    }
-},
-{
-    "name": "Update Jira Issue",
-    "description": "Update fields of an existing Jira issue such as summary, description, priority, issue type, or labels. Only the provided fields will be updated — others remain unchanged.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "issue_key":   {"type": "string",  "description": "Jira issue key e.g. KAN-42"},
-            "summary":     {"type": "string",  "description": "New summary/title for the issue"},
-            "description": {"type": "string",  "description": "New description for the issue"},
-            "priority":    {"type": "string",  "description": "New priority: Low, Medium, High, Critical"},
-            "issue_type":  {"type": "string",  "description": "New issue type: Bug, Task, Story, Epic"},
-            "labels":      {"type": "array",   "items": {"type": "string"}, "description": "New labels list e.g. ['incident', 'agentforce']"}
-        },
-        "required": ["issue_key"]
-    },
-    {
-    "name": "Retrieve Jira Comments",
-    "description": "Fetch all comments of an existing Jira issue. Use this to read the latest updates, progress notes, or resolution details posted on a Jira ticket.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "issue_key": {"type": "string", "description": "Jira issue key e.g. KAN-42"}
-        },
-        "required": ["issue_key"]
-    }
-},
-{
-    "name": "Provide Jira Projects",
-    "description": "Retrieve all available Jira projects. Always call this tool FIRST before creating a Jira issue so the customer can select the correct project dynamically instead of hardcoding a project key.",
-    "inputSchema": {
-        "type": "object",
-        "properties": {},
-        "required": []
-    }
-}
-}
-                    ]  # ← tools list closes here
+                            "name": "Create Jira Issue",
+                            "description": "Create jira issues. Always call this tool Immediately after creating the salesforce case record",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "summary": {"type": "string", "description": "Short title of the Jira issue"},
+                                    "description": {"type": "string", "description": "Detailed description of the issue"},
+                                    "sf_case_id": {"type": "string", "description": "Salesforce Case ID to link (optional)"}
+                                },
+                                "required": ["summary", "description", "sf_case_id"]
+                            }
+                        },
+                        {
+                            "name": "Get Salesforce Users",
+                            "description": "Retrieve all active Salesforce users. Always call this tool FIRST before assigning a permission set so the customer can select the correct user.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {},
+                                "required": []
+                            }
+                        },
+                        {
+                            "name": "Update Jira Issue Status",
+                            "description": "Update the status of an existing Jira issue. Use this to transition a Jira ticket to In Progress, In Review, Done, or To Do.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "issue_key": {"type": "string", "description": "Jira issue key e.g. ENG-101"},
+                                    "status": {"type": "string", "description": "Target status: To Do, In Progress, In Review, Done"}
+                                },
+                                "required": ["issue_key", "status"]
+                            }
+                        },
+                        {
+                            "name": "Get Jira Issue Details",
+                            "description": "Fetch the details of an existing Jira issue by its key. Use this to check the current status, assignee, priority, and description of a Jira ticket.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "issue_key": {"type": "string", "description": "Jira issue key e.g. ENG-101"}
+                                },
+                                "required": ["issue_key"]
+                            }
+                        },
+                        {
+                            "name": "Update Case Status",
+                            "description": "Update the status of an existing Salesforce Case. Use this to close or update a case when an incident is resolved.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "case_id": {"type": "string", "description": "Salesforce Case ID e.g. 5001X000ABC"},
+                                    "status": {"type": "string", "description": "New status: New, Working, Escalated, Closed"}
+                                },
+                                "required": ["case_id", "status"]
+                            }
+                        },
+                        {
+                            "name": "Add Jira Comment",
+                            "description": "Add a comment to an existing Jira issue. Use this to post updates, progress notes, or resolution details directly on a Jira ticket.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "issue_key": {"type": "string", "description": "Jira issue key e.g. KAN-42"},
+                                    "comment": {"type": "string", "description": "The comment text to post on the Jira issue"}
+                                },
+                                "required": ["issue_key", "comment"]
+                            }
+                        },
+                        {
+                            "name": "Retrieve Jira Issues",
+                            "description": "Search for Jira issues using filters like project, status, priority, assignee, or keyword. Use this to find existing tickets before creating new ones or to get an overview of open issues.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "project_key": {"type": "string", "description": "Jira project key e.g. KAN"},
+                                    "status": {"type": "string", "description": "Issue status: To Do, In Progress, In Review, Done"},
+                                    "priority": {"type": "string", "description": "Priority: Low, Medium, High, Critical"},
+                                    "assignee_email": {"type": "string", "description": "Email of the assignee e.g. john@acme.com"},
+                                    "keyword": {"type": "string", "description": "Search keyword in summary or description"},
+                                    "max_results": {"type": "integer", "description": "Maximum number of results to return (default: 10)"}
+                                },
+                                "required": []
+                            }
+                        },
+                        {
+                            "name": "Assign Jira Issue",
+                            "description": "Assign an existing Jira issue to a user by their email address. Use this after Retrieve Jira Users to assign the right ticket to the right engineer.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "issue_key": {"type": "string", "description": "Jira issue key e.g. KAN-42"},
+                                    "assignee_email": {"type": "string", "description": "Email of the user to assign e.g. john@acme.com"}
+                                },
+                                "required": ["issue_key", "assignee_email"]
+                            }
+                        },
+                        {
+                            "name": "Retrieve Jira Users",
+                            "description": "Retrieve all active Jira users. Always call this tool FIRST before assigning a Jira issue so the customer can select the correct user to assign.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {},
+                                "required": []
+                            }
+                        },
+                        {
+                            "name": "Update Jira Issue",
+                            "description": "Update fields of an existing Jira issue such as summary, description, priority, issue type, or labels. Only the provided fields will be updated — others remain unchanged.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "issue_key": {"type": "string", "description": "Jira issue key e.g. KAN-42"},
+                                    "summary": {"type": "string", "description": "New summary/title for the issue"},
+                                    "description": {"type": "string", "description": "New description for the issue"},
+                                    "priority": {"type": "string", "description": "New priority: Low, Medium, High, Critical"},
+                                    "issue_type": {"type": "string", "description": "New issue type: Bug, Task, Story, Epic"},
+                                    "labels": {"type": "array", "items": {"type": "string"}, "description": "New labels list e.g. ['incident', 'agentforce']"}
+                                },
+                                "required": ["issue_key"]
+                            }
+                        },
+                        {
+                            "name": "Retrieve Jira Comments",
+                            "description": "Fetch all comments of an existing Jira issue. Use this to read the latest updates, progress notes, or resolution details posted on a Jira ticket.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "issue_key": {"type": "string", "description": "Jira issue key e.g. KAN-42"}
+                                },
+                                "required": ["issue_key"]
+                            }
+                        },
+                        {
+                            "name": "Provide Jira Projects",
+                            "description": "Retrieve all available Jira projects. Always call this tool FIRST before creating a Jira issue so the customer can select the correct project dynamically instead of hardcoding a project key.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {},
+                                "required": []
+                            }
+                        }
+                    ]
                 }
-            })  # ← JSONResponse closes here
+            })
 
         elif method == "tools/call":
             tool_name = params.get("name")
@@ -329,7 +328,7 @@ async def mcp_handler(request: Request):
             elif tool_name == "Create Jira Issue":
                 result = create_jira_issue(**args)
             elif tool_name == "Get Salesforce Users":
-                result = get_salesforce_users(**args)
+                result = get_salesforce_users()
             elif tool_name == "Update Jira Issue Status":
                 result = update_jira_issue_status(**args)
             elif tool_name == "Get Jira Issue Details":
@@ -343,13 +342,13 @@ async def mcp_handler(request: Request):
             elif tool_name == "Assign Jira Issue":
                 result = assign_jira_issue(**args)
             elif tool_name == "Retrieve Jira Users":
-                result = get_jira_users(**args)
+                result = get_jira_users()
             elif tool_name == "Update Jira Issue":
-                result = get_jira_comments(**args)
+                result = update_jira_issue(**args)      # ✅ Fixed — was mapped to get_jira_comments
             elif tool_name == "Retrieve Jira Comments":
-                result = (**args)
+                result = get_jira_comments(**args)      # ✅ Fixed — was result = (**args)
             elif tool_name == "Provide Jira Projects":
-                result = get_jira_projects(**args)  
+                result = get_jira_projects()
             else:
                 result = f"Unknown tool: {tool_name}"
 
