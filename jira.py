@@ -434,3 +434,91 @@ def update_jira_issue(
         "updated_fields": list(fields.keys()),
         "message":       f"Jira issue {issue_key} updated successfully."
     }
+
+def get_jira_comments(issue_key: str) -> dict:
+    """
+    Fetches all comments of an existing Jira issue.
+    e.g. issue_key="KAN-42"
+    """
+    auth = get_jira_auth()
+
+    headers = {"Content-Type": "application/json"}
+    url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/comment"
+
+    response = requests.get(url, auth=auth, headers=headers)
+    response.raise_for_status()
+
+    data = response.json()
+    comments = data.get("comments", [])
+
+    if not comments:
+        return {
+            "status":  "no_comments_found",
+            "message": f"No comments found for Jira issue {issue_key}.",
+            "comments": []
+        }
+
+    formatted_comments = [
+        {
+            "comment_id": comment.get("id"),
+            "author":     comment.get("author", {}).get("displayName"),
+            "body":       " ".join(
+                            text_node.get("text", "")
+                            for block in comment.get("body", {}).get("content", [])
+                            for text_node in block.get("content", [])
+                            if text_node.get("type") == "text"
+                          ),
+            "created_at": comment.get("created"),
+            "updated_at": comment.get("updated")
+        }
+        for comment in comments
+    ]
+
+    return {
+        "status":         "success",
+        "issue_key":      issue_key,
+        "issue_url":      f"{JIRA_BASE_URL}/browse/{issue_key}",
+        "total_comments": len(formatted_comments),
+        "comments":       formatted_comments
+    }
+
+
+def get_jira_projects() -> dict:
+    """
+    Fetches all available Jira projects.
+    Use this before createJiraIssue so the customer
+    can select the correct project dynamically.
+    """
+    auth = get_jira_auth()
+
+    headers = {"Content-Type": "application/json"}
+    url = f"{JIRA_BASE_URL}/rest/api/3/project"
+
+    response = requests.get(url, auth=auth, headers=headers)
+    response.raise_for_status()
+
+    projects = response.json()
+
+    if not projects:
+        return {
+            "status":   "no_projects_found",
+            "message":  "No Jira projects found.",
+            "projects": []
+        }
+
+    formatted_projects = [
+        {
+            "project_id":   project.get("id"),
+            "project_key":  project.get("key"),
+            "project_name": project.get("name"),
+            "project_type": project.get("projectTypeKey"),
+            "project_url":  f"{JIRA_BASE_URL}/browse/{project.get('key')}"
+        }
+        for project in projects
+    ]
+
+    return {
+        "status":         "success",
+        "total_returned": len(formatted_projects),
+        "projects":       formatted_projects
+    }
