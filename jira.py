@@ -98,3 +98,37 @@ def _get_account_id(email: str, auth: HTTPBasicAuth) -> str | None:
     )
     users = response.json() if response.ok else []
     return users[0]["accountId"] if users else None
+
+def update_jira_issue_status(issue_key: str, status: str):
+    access_token = get_access_token()
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    # Step 1 — Get available transitions for the issue
+    transitions_url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/transitions"
+    transitions_response = requests.get(transitions_url, headers=headers)
+    transitions_response.raise_for_status()
+    transitions = transitions_response.json().get("transitions", [])
+    # Step 2 — Match the requested status to a transition (case-insensitive)
+    transition_id = None
+    for t in transitions:
+        if t["to"]["name"].lower() == status.lower():
+            transition_id = t["id"]
+            break
+    if not transition_id:
+        available = [t["to"]["name"] for t in transitions]
+        return {
+            "status": "error",
+            "message": f"Status '{status}' not found. Available transitions: {available}"
+        }
+    # Step 3 — Apply the transition
+    payload = {"transition": {"id": transition_id}}
+    response = requests.post(transitions_url, headers=headers, json=payload)
+    response.raise_for_status()
+
+    return {
+        "status": "success",
+        "message": f"Jira issue {issue_key} moved to '{status}' successfully."
+    }
