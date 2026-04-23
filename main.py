@@ -345,11 +345,11 @@ async def mcp_handler(request: Request):
             elif tool_name == "Retrieve Jira Users":
                 result = get_jira_users(**args)
             elif tool_name == "Update Jira Issue":
-                result = update_jira_issue(**args)
+                result = get_jira_comments(**args)
             elif tool_name == "Retrieve Jira Comments":
-                result = get_jira_users(**args)
+                result = (**args)
             elif tool_name == "Provide Jira Projects":
-                result = update_jira_issue(**args)  
+                result = get_jira_projects(**args)  
             else:
                 result = f"Unknown tool: {tool_name}"
 
