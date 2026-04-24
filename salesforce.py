@@ -14,9 +14,9 @@ def create_lead(first_name, last_name, email, company):
 
         data = {
             "FirstName": first_name,
-            "LastName": last_name,
-            "Email": email,
-            "Company": company
+            "LastName":  last_name,
+            "Email":     email,
+            "Company":   company
         }
 
         response = requests.post(
@@ -24,67 +24,30 @@ def create_lead(first_name, last_name, email, company):
             json=data,
             headers={
                 "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json"
+                "Content-Type":  "application/json"
             }
         )
 
         if response.status_code in [200, 201]:
-            return f"✅ Lead created successfully: {response.json()}"
+            lead_id = response.json().get("id")
+            return {
+                "status":  "success",
+                "lead_id": lead_id,
+                "message": f"Lead created successfully. Lead ID: {lead_id}"
+            }
         else:
-            return f"❌ Failed to create lead: {response.text}"
+            return {
+                "status":  "error",
+                "lead_id": None,
+                "message": f"Failed to create lead: {response.text}"
+            }
 
     except Exception as e:
-        return f"❌ Error creating lead: {str(e)}"
-
-
-# -------------------------------
-# 🔹 ASSIGN PERMISSION SET
-# -------------------------------
-def assign_permission_set(username, permission_set_name):
-    try:
-        token = get_access_token()
-        base = get_instance_url()
-
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
+        return {
+            "status":  "error",
+            "lead_id": None,
+            "message": f"Error creating lead: {str(e)}"
         }
-
-        # 1️⃣ Get User Id
-        user_query = f"{base}/services/data/v61.0/query?q=SELECT+Id+FROM+User+WHERE+Username='{username}'"
-        user_res = requests.get(user_query, headers=headers).json()
-
-        if not user_res.get("records"):
-            return "❌ User not found"
-
-        user_id = user_res["records"][0]["Id"]
-
-        # 2️⃣ Get Permission Set Id
-        ps_query = f"{base}/services/data/v61.0/query?q=SELECT+Id+FROM+PermissionSet+WHERE+Name='{permission_set_name}'"
-        ps_res = requests.get(ps_query, headers=headers).json()
-
-        if not ps_res.get("records"):
-            return "❌ Permission Set not found"
-
-        ps_id = ps_res["records"][0]["Id"]
-
-        # 3️⃣ Assign Permission Set
-        assign_url = f"{base}/services/data/v61.0/sobjects/PermissionSetAssignment"
-
-        assign_body = {
-            "AssigneeId": user_id,
-            "PermissionSetId": ps_id
-        }
-
-        assign_res = requests.post(assign_url, json=assign_body, headers=headers)
-
-        if assign_res.status_code in [200, 201]:
-            return "✅ Permission Set assigned successfully"
-        else:
-            return f"❌ Failed to assign Permission Set: {assign_res.text}"
-
-    except Exception as e:
-        return f"❌ Error assigning Permission Set: {str(e)}"
 
 
 # -------------------------------
@@ -93,9 +56,8 @@ def assign_permission_set(username, permission_set_name):
 def create_permission_set(api_name, label):
     try:
         token = get_access_token()
-        base = get_instance_url()
+        base  = get_instance_url()
 
-        # Metadata SOAP endpoint
         url = f"{base}/services/Soap/m/64.0"
 
         body = f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -124,49 +86,148 @@ def create_permission_set(api_name, label):
             data=body,
             headers={
                 "Authorization": f"Bearer {token}",
-                "Content-Type": "text/xml",
-                "SOAPAction": '""'
+                "Content-Type":  "text/xml",
+                "SOAPAction":    '""'
             }
         )
 
         if response.status_code in [200, 201]:
-            return f"✅ Permission Set created: {response.text}"
+            return {
+                "status":            "success",
+                "permission_set_id": api_name,   # SOAP doesn't return ID — use api_name as reference
+                "message":           f"Permission Set '{label}' created successfully."
+            }
         else:
-            return f"❌ Failed to create Permission Set: {response.text}"
+            return {
+                "status":            "error",
+                "permission_set_id": None,
+                "message":           f"Failed to create Permission Set: {response.text}"
+            }
 
     except Exception as e:
-        return f"❌ Error creating Permission Set: {str(e)}"
+        return {
+            "status":            "error",
+            "permission_set_id": None,
+            "message":           f"Error creating Permission Set: {str(e)}"
+        }
 
-        # -------------------------------
-# 🔹 CREATE CASE
-def create_case(subject, description, priority, origin):
+
+# -------------------------------
+# 🔹 ASSIGN PERMISSION SET
+# -------------------------------
+def assign_permission_set(username, permission_set_name):
     try:
         token = get_access_token()
-        base = get_instance_url()
+        base  = get_instance_url()
 
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
+            "Content-Type":  "application/json"
+        }
+
+        # 1️⃣ Get User Id
+        user_query = f"{base}/services/data/v61.0/query?q=SELECT+Id+FROM+User+WHERE+Username='{username}'"
+        user_res   = requests.get(user_query, headers=headers).json()
+
+        if not user_res.get("records"):
+            return {
+                "status":        "error",
+                "assignment_id": None,
+                "message":       f"User '{username}' not found."
+            }
+
+        user_id = user_res["records"][0]["Id"]
+
+        # 2️⃣ Get Permission Set Id
+        ps_query = f"{base}/services/data/v61.0/query?q=SELECT+Id+FROM+PermissionSet+WHERE+Name='{permission_set_name}'"
+        ps_res   = requests.get(ps_query, headers=headers).json()
+
+        if not ps_res.get("records"):
+            return {
+                "status":        "error",
+                "assignment_id": None,
+                "message":       f"Permission Set '{permission_set_name}' not found."
+            }
+
+        ps_id = ps_res["records"][0]["Id"]
+
+        # 3️⃣ Assign Permission Set
+        assign_url  = f"{base}/services/data/v61.0/sobjects/PermissionSetAssignment"
+        assign_body = {
+            "AssigneeId":      user_id,
+            "PermissionSetId": ps_id
+        }
+
+        assign_res = requests.post(assign_url, json=assign_body, headers=headers)
+
+        if assign_res.status_code in [200, 201]:
+            assignment_id = assign_res.json().get("id")
+            return {
+                "status":        "success",
+                "assignment_id": assignment_id,
+                "message":       f"Permission Set '{permission_set_name}' assigned to '{username}' successfully."
+            }
+        else:
+            return {
+                "status":        "error",
+                "assignment_id": None,
+                "message":       f"Failed to assign Permission Set: {assign_res.text}"
+            }
+
+    except Exception as e:
+        return {
+            "status":        "error",
+            "assignment_id": None,
+            "message":       f"Error assigning Permission Set: {str(e)}"
+        }
+
+
+# -------------------------------
+# 🔹 CREATE CASE
+# -------------------------------
+def create_case(subject, description, priority, origin):
+    try:
+        token = get_access_token()
+        base  = get_instance_url()
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type":  "application/json"
         }
 
         data = {
-            "Subject": subject,
+            "Subject":     subject,
             "Description": description,
-            "Priority": priority,
-            "Origin": origin
+            "Priority":    priority,
+            "Origin":      origin
         }
 
-        url = f"{base}/services/data/v61.0/sobjects/Case/"
+        url      = f"{base}/services/data/v61.0/sobjects/Case/"
         response = requests.post(url, json=data, headers=headers)
 
         if response.status_code in [200, 201]:
             case_id = response.json().get("id")
-            return f"✅ Case created successfully. Case ID: {case_id}"
+            return {
+                "status":   "success",
+                "case_id":  case_id,
+                "case_url": f"{base}/{case_id}",
+                "message":  f"Case created successfully. Case ID: {case_id}"
+            }
         else:
-            return f"❌ Failed to create case: {response.text}"
+            return {
+                "status":   "error",
+                "case_id":  None,
+                "case_url": None,
+                "message":  f"Failed to create case: {response.text}"
+            }
 
     except Exception as e:
-        return f"❌ Error creating case: {str(e)}"
+        return {
+            "status":   "error",
+            "case_id":  None,
+            "case_url": None,
+            "message":  f"Error creating case: {str(e)}"
+        }
 
 
 # -------------------------------
@@ -175,78 +236,111 @@ def create_case(subject, description, priority, origin):
 def update_jiraurl(case_id, jiraissueurl):
     try:
         token = get_access_token()
-        base = get_instance_url()
+        base  = get_instance_url()
 
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
+            "Content-Type":  "application/json"
         }
 
-        # Valid statuses: New, Working, Escalated, Closed
-        url = f"{base}/services/data/v61.0/sobjects/Case/{case_id}"
-        data = {"Jira_Issue_URL__C": jiraissueurl}
-
+        url      = f"{base}/services/data/v61.0/sobjects/Case/{case_id}"
+        data     = {"Jira_Issue_URL__C": jiraissueurl}
         response = requests.patch(url, json=data, headers=headers)
 
         if response.status_code == 204:
-            return f"✅ The Url of created issue of jira has been updated on the case."
+            return {
+                "status":  "success",
+                "case_id": case_id,
+                "message": f"Jira URL attached to Case {case_id} successfully."
+            }
         else:
-            return f"❌ Failed to update case: {response.text}"
+            return {
+                "status":  "error",
+                "case_id": case_id,
+                "message": f"Failed to attach Jira URL: {response.text}"
+            }
 
     except Exception as e:
-        return f"❌ Error updating case: {str(e)}"
-
-
-
-def get_salesforce_users():
-    access_token = get_access_token()
-    base = get_instance_url()
-    soql = "SELECT Id, Name, Email, Username FROM User WHERE IsActive = true ORDER BY Name ASC"
-    url  = f"{base}/services/data/v60.0/query"
-
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type":  "application/json"
-    }
-
-    response = requests.get(url, headers=headers, params={"q": soql})
-    response.raise_for_status()
-
-    records = response.json().get("records", [])
-
-    users = [
-        {
-            "id":       rec["Id"],
-            "name":     rec["Name"],
-            "email":    rec["Email"],
-            "username": rec["Username"]
+        return {
+            "status":  "error",
+            "case_id": case_id,
+            "message": f"Error attaching Jira URL: {str(e)}"
         }
-        for rec in records
-    ]
 
-    return {"total": len(users), "users": users}
 
+# -------------------------------
+# 🔹 GET SALESFORCE USERS
+# -------------------------------
+def get_salesforce_users():
+    try:
+        access_token = get_access_token()
+        base         = get_instance_url()
+
+        soql = "SELECT Id, Name, Email, Username FROM User WHERE IsActive = true ORDER BY Name ASC"
+        url  = f"{base}/services/data/v60.0/query"
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type":  "application/json"
+        }
+
+        response = requests.get(url, headers=headers, params={"q": soql})
+        response.raise_for_status()
+
+        records = response.json().get("records", [])
+
+        users = [
+            {
+                "id":       rec["Id"],
+                "name":     rec["Name"],
+                "email":    rec["Email"],
+                "username": rec["Username"]
+            }
+            for rec in records
+        ]
+
+        return {
+            "status": "success",
+            "total":  len(users),
+            "users":  users
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "total":  0,
+            "users":  [],
+            "message": f"Error fetching users: {str(e)}"
+        }
+
+
+# -------------------------------
+# 🔹 UPDATE CASE STATUS
+# -------------------------------
 def update_case_status(case_id: str, status: str) -> dict:
-    """
-    Updates the status of an existing Salesforce Case.
-    e.g. "New", "Working", "Escalated", "Closed"
-    """
-    access_token = get_access_token()
-    base = get_instance_url()
+    try:
+        access_token = get_access_token()
+        base         = get_instance_url()
 
-    url = f"{base}/services/data/v60.0/sobjects/Case/{case_id}"
+        url = f"{base}/services/data/v60.0/sobjects/Case/{case_id}"
 
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type":  "application/json"
-    }
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type":  "application/json"
+        }
 
-    payload = {"Status": status}
+        response = requests.patch(url, headers=headers, json={"Status": status})
+        response.raise_for_status()
 
-    response = requests.patch(url, headers=headers, json=payload)
-    response.raise_for_status()
+        return {
+            "status":  "success",
+            "case_id": case_id,
+            "message": f"Case {case_id} status updated to '{status}' successfully."
+        }
 
-    return {
-        "status":  "success",
-        "message": f"Salesforce Case {case_id} status updated to '{status}' successfully."
-    }
+    except Exception as e:
+        return {
+            "status":  "error",
+            "case_id": case_id,
+            "message": f"Error updating case status: {str(e)}"
+        }
