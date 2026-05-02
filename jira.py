@@ -293,13 +293,15 @@ def search_jira_issues(
         if jql_parts:
             jql += " ORDER BY created DESC"
 
-        params = {
+        # ✅ POST with JSON body
+        payload = {
             "jql":        jql,
             "maxResults": max_results,
-            "fields":     "summary,status,priority,assignee,issuetype,created,updated,labels"
+            "fields":     ["summary", "status", "priority", "assignee",
+                           "issuetype", "created", "updated", "labels"]
         }
 
-        response = requests.get(url, auth=auth, headers=headers, params=params)
+        response = requests.post(url, auth=auth, headers=headers, json=payload)
         response.raise_for_status()
 
         data   = response.json()
@@ -348,7 +350,6 @@ def search_jira_issues(
             "issues":         [],
             "message":        f"Error searching Jira issues: {str(e)}"
         }
-
 
 # -------------------------------
 # 🔹 ASSIGN JIRA ISSUE
