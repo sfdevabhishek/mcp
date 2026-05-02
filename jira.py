@@ -274,7 +274,7 @@ def search_jira_issues(
     try:
         auth    = get_jira_auth()
         headers = {"Content-Type": "application/json"}
-        url     = f"{JIRA_BASE_URL}/rest/api/3/search"
+        url     = f"{JIRA_BASE_URL}/rest/api/3/search/jql"
 
         # Build JQL dynamically
         jql_parts = []
