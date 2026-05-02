@@ -302,6 +302,15 @@ def search_jira_issues(
         }
 
         response = requests.post(url, auth=auth, headers=headers, json=payload)
+        if not response.ok:
+            return {
+                "status":         "error",
+                "total_found":    0,
+                "total_returned": 0,
+                "jql_used":       jql,
+                "issues":         [],
+                "message":        f"Jira error {response.status_code}: {response.text}"
+                }
         response.raise_for_status()
 
         data   = response.json()
