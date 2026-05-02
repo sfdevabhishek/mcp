@@ -289,7 +289,7 @@ def search_jira_issues(
         if keyword:
             jql_parts.append(f"summary ~ \"{keyword}\" OR description ~ \"{keyword}\"")
 
-        jql = " AND ".join(jql_parts) if jql_parts else "ORDER BY created DESC"
+        jql = " AND ".join(jql_parts) if jql_parts else "project is not EMPTY ORDER BY created DESC"
         if jql_parts:
             jql += " ORDER BY created DESC"
 
