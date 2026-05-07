@@ -28,8 +28,9 @@ def get_session_id():
 
 
 def get_messages(query):
-    sId = "15062c58-52e5-4cdd-b369-72ecd4907ce9"
-    token = n7_auth_token()  # Salesforce access token
+    
+    sId = os.getenv('SESSION_ID')
+    token = n7_auth_token()  # Neuron7 access token
     # Salesforce access token
     N7MessageUrl = N7URL+"api/v2/intelligent-search"
     headers = {
