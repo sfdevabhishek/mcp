@@ -160,8 +160,16 @@ async def mcp_handler(request: Request):
                                 "properties": {
                                     "subject":     {"type": "string", "description": "Short summary of the issue"},
                                     "description": {"type": "string", "description": "Detailed description of the issue"},
-                                    "priority":    {"type": "string", "description": "Priority: Low, Medium or High"},
-                                    "origin":      {"type": "string", "description": "Origin: Phone, Email or Web"}
+                                    "priority": {
+                                        "type": "string",
+                                        "description": "Priority of the case",
+                                        "enum": ["Low", "Medium", "High"]       # ← enum added
+                                    },
+                                    "origin": {
+                                        "type": "string",
+                                        "description": "Origin of the case",
+                                        "enum": ["Phone", "Email", "Web"]       # ← enum added
+                                    }
                                 },
                                 "required": ["subject", "description", "priority", "origin"]
                             },
@@ -231,7 +239,11 @@ async def mcp_handler(request: Request):
                                 "type": "object",
                                 "properties": {
                                     "case_id": {"type": "string", "description": "Salesforce Case ID e.g. 5001X000ABC"},
-                                    "status":  {"type": "string", "description": "New status: New, Working, Escalated, Closed"}
+                                    "status": {
+                                        "type": "string",
+                                        "description": "New status of the case",
+                                        "enum": ["New", "Working", "Escalated", "Closed"]  # ← enum added
+                                    }
                                 },
                                 "required": ["case_id", "status"]
                             },
@@ -244,7 +256,7 @@ async def mcp_handler(request: Request):
                                 }
                             }
                         },
-                        # ---------Neuron Tools-----
+                        # ── NEURON TOOLS ──────────────────────────────────────────────
                         {
                             "name": "Provide Solutions",
                             "description": "Send a query and get a bot response from N7 messaging service",
@@ -258,7 +270,7 @@ async def mcp_handler(request: Request):
                             "outputSchema": {
                                 "type": "object",
                                 "properties": {
-                                    "message":  {"type": "string", "description": "Result message"}
+                                    "message": {"type": "string", "description": "Result message"}
                                 }
                             }
                         },
@@ -271,7 +283,17 @@ async def mcp_handler(request: Request):
                                 "properties": {
                                     "summary":     {"type": "string", "description": "Short title of the Jira issue"},
                                     "description": {"type": "string", "description": "Detailed description of the issue"},
-                                    "sf_case_id":  {"type": "string", "description": "Salesforce Case ID to link"}
+                                    "sf_case_id":  {"type": "string", "description": "Salesforce Case ID to link"},
+                                    "priority": {
+                                        "type": "string",
+                                        "description": "Priority of the Jira issue",
+                                        "enum": ["Low", "Medium", "High", "Critical"]  # ← enum added
+                                    },
+                                    "issue_type": {
+                                        "type": "string",
+                                        "description": "Type of the Jira issue",
+                                        "enum": ["Bug", "Task", "Story", "Epic"]        # ← enum added
+                                    }
                                 },
                                 "required": ["summary", "description", "sf_case_id"]
                             },
@@ -292,7 +314,11 @@ async def mcp_handler(request: Request):
                                 "type": "object",
                                 "properties": {
                                     "issue_key": {"type": "string", "description": "Jira issue key e.g. KAN-42"},
-                                    "status":    {"type": "string", "description": "Target status: To Do, In Progress, In Review, Done"}
+                                    "status": {
+                                        "type": "string",
+                                        "description": "Target status of the Jira issue",
+                                        "enum": ["To Do", "In Progress", "In Review", "Done"]  # ← enum added
+                                    }
                                 },
                                 "required": ["issue_key", "status"]
                             },
@@ -360,8 +386,16 @@ async def mcp_handler(request: Request):
                                 "type": "object",
                                 "properties": {
                                     "project_key":    {"type": "string",  "description": "Jira project key e.g. KAN"},
-                                    "status":         {"type": "string",  "description": "Issue status: To Do, In Progress, In Review, Done"},
-                                    "priority":       {"type": "string",  "description": "Priority: Low, Medium, High, Critical"},
+                                    "status": {
+                                        "type": "string",
+                                        "description": "Issue status to filter by",
+                                        "enum": ["To Do", "In Progress", "In Review", "Done"]  # ← enum added
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "description": "Priority to filter by",
+                                        "enum": ["Low", "Medium", "High", "Critical"]           # ← enum added
+                                    },
                                     "assignee_email": {"type": "string",  "description": "Email of the assignee e.g. john@acme.com"},
                                     "keyword":        {"type": "string",  "description": "Search keyword in summary or description"},
                                     "max_results":    {"type": "integer", "description": "Maximum number of results to return (default: 10)"}
@@ -453,9 +487,17 @@ async def mcp_handler(request: Request):
                                     "issue_key":   {"type": "string", "description": "Jira issue key e.g. KAN-42"},
                                     "summary":     {"type": "string", "description": "New summary/title for the issue"},
                                     "description": {"type": "string", "description": "New description for the issue"},
-                                    "priority":    {"type": "string", "description": "New priority: Low, Medium, High, Critical"},
-                                    "issue_type":  {"type": "string", "description": "New issue type: Bug, Task, Story, Epic"},
-                                    "labels":      {"type": "array",  "items": {"type": "string"}, "description": "New labels list"}
+                                    "priority": {
+                                        "type": "string",
+                                        "description": "New priority of the issue",
+                                        "enum": ["Low", "Medium", "High", "Critical"]  # ← enum added
+                                    },
+                                    "issue_type": {
+                                        "type": "string",
+                                        "description": "New issue type",
+                                        "enum": ["Bug", "Task", "Story", "Epic"]        # ← enum added
+                                    },
+                                    "labels": {"type": "array", "items": {"type": "string"}, "description": "New labels list"}
                                 },
                                 "required": ["issue_key"]
                             },
@@ -533,13 +575,13 @@ async def mcp_handler(request: Request):
                                 }
                             }
                         }
-                    ]  # ← tools list closes here
+                    ]
                 }
-            })  # ← JSONResponse closes here
+            })
 
         elif method == "tools/call":
             tool_name = params.get("name")
-            args = params.get("arguments", {})
+            args      = params.get("arguments", {})
 
             if tool_name == "Create Lead":
                 result = create_lead(**args)
@@ -578,12 +620,12 @@ async def mcp_handler(request: Request):
             elif tool_name == "Provide Jira Projects":
                 result = get_jira_projects()
             else:
-                result = f"Unknown tool: {tool_name}"
+                result = {"status": "error", "message": f"Unknown tool: {tool_name}"}
 
             return JSONResponse(content={
                 "jsonrpc": "2.0",
                 "id": req_id,
-                "result": {"content": [{"type": "text", "text": str(result)}]}
+                "result": {"content": [{"type": "text", "text": json.dumps(result)}]}  # ← str() → json.dumps()
             })
 
         else:
