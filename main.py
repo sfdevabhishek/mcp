@@ -2,6 +2,7 @@ import logging
 import json
 import httpx
 import asyncio
+from enum import Enum
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
@@ -163,12 +164,12 @@ async def mcp_handler(request: Request):
                                     "priority": {
                                         "type": "string",
                                         "description": "Priority of the case",
-                                        "enum": ["Low", "Medium", "High"]       # ← enum added
+                                        "enum": ["Low", "Medium", "High"]       
                                     },
                                     "origin": {
                                         "type": "string",
                                         "description": "Origin of the case",
-                                        "enum": ["Phone", "Email", "Web"]       # ← enum added
+                                        "enum": ["Phone", "Email", "Web"]      
                                     }
                                 },
                                 "required": ["subject", "description", "priority", "origin"]
@@ -180,7 +181,8 @@ async def mcp_handler(request: Request):
                                     "case_id":  {"type": "string", "description": "Salesforce Case ID"},
                                     "case_url": {"type": "string", "description": "URL to the Salesforce Case record"},
                                     "message":  {"type": "string", "description": "Result message"}
-                                }
+                                },
+                                 "required": ["status","case_id", "case_url","message"]
                             }
                         },
                         {
@@ -242,7 +244,7 @@ async def mcp_handler(request: Request):
                                     "status": {
                                         "type": "string",
                                         "description": "New status of the case",
-                                        "enum": ["New", "Working", "Escalated", "Closed"]  # ← enum added
+                                        "enum": ["New", "Working", "Escalated", "Closed"]  
                                     }
                                 },
                                 "required": ["case_id", "status"]
@@ -287,12 +289,12 @@ async def mcp_handler(request: Request):
                                     "priority": {
                                         "type": "string",
                                         "description": "Priority of the Jira issue",
-                                        "enum": ["Low", "Medium", "High", "Critical"]  # ← enum added
+                                        "enum": ["Low", "Medium", "High", "Critical"]  
                                     },
                                     "issue_type": {
                                         "type": "string",
                                         "description": "Type of the Jira issue",
-                                        "enum": ["Bug", "Task", "Story", "Epic"]        # ← enum added
+                                        "enum": ["Bug", "Task", "Story", "Epic"]       
                                     }
                                 },
                                 "required": ["summary", "description", "sf_case_id"]
@@ -317,7 +319,7 @@ async def mcp_handler(request: Request):
                                     "status": {
                                         "type": "string",
                                         "description": "Target status of the Jira issue",
-                                        "enum": ["To Do", "In Progress", "In Review", "Done"]  # ← enum added
+                                        "enum": ["To Do", "In Progress", "In Review", "Done"]  
                                     }
                                 },
                                 "required": ["issue_key", "status"]
@@ -389,12 +391,12 @@ async def mcp_handler(request: Request):
                                     "status": {
                                         "type": "string",
                                         "description": "Issue status to filter by",
-                                        "enum": ["To Do", "In Progress", "In Review", "Done"]  # ← enum added
+                                        "enum": ["To Do", "In Progress", "In Review", "Done"]  
                                     },
                                     "priority": {
                                         "type": "string",
                                         "description": "Priority to filter by",
-                                        "enum": ["Low", "Medium", "High", "Critical"]           # ← enum added
+                                        "enum": ["Low", "Medium", "High", "Critical"]          
                                     },
                                     "assignee_email": {"type": "string",  "description": "Email of the assignee e.g. john@acme.com"},
                                     "keyword":        {"type": "string",  "description": "Search keyword in summary or description"},
@@ -490,12 +492,12 @@ async def mcp_handler(request: Request):
                                     "priority": {
                                         "type": "string",
                                         "description": "New priority of the issue",
-                                        "enum": ["Low", "Medium", "High", "Critical"]  # ← enum added
+                                        "enum": ["Low", "Medium", "High", "Critical"]  
                                     },
                                     "issue_type": {
                                         "type": "string",
                                         "description": "New issue type",
-                                        "enum": ["Bug", "Task", "Story", "Epic"]        # ← enum added
+                                        "enum": ["Bug", "Task", "Story", "Epic"]        
                                     },
                                     "labels": {"type": "array", "items": {"type": "string"}, "description": "New labels list"}
                                 },
@@ -581,6 +583,65 @@ async def mcp_handler(request: Request):
 
         elif method == "tools/call":
             tool_name = params.get("name")
+            args = params.get("arguments", {})
+
+            if tool_name == "Create Lead":
+                result = create_lead(**args)
+            elif tool_name == "Create Permission Set":
+                result = create_permission_set(**args)
+            elif tool_name == "Assign Permission Set":
+                result = assign_permission_set(**args)
+            elif tool_name == "Create Case":
+                result = create_case(**args)
+            elif tool_name == "Attach jira issue with case":
+                result = update_jiraurl(**args)
+            elif tool_name == "Provide Solutions":
+                result = get_messages(**args)
+            elif tool_name == "Create Jira Issue":
+                result = create_jira_issue(**args)
+            elif tool_name == "Get Salesforce Users":
+                result = get_salesforce_users()
+            elif tool_name == "Update Jira Issue Status":
+                result = update_jira_issue_status(**args)
+            elif tool_name == "Get Jira Issue Details":
+                result = get_jira_issue(**args)
+            elif tool_name == "Update Case Status":
+                result = update_case_status(**args)
+            elif tool_name == "Add Jira Comment":
+                result = add_jira_comment(**args)
+            elif tool_name == "Retrieve Jira Issues":
+                result = search_jira_issues(**args)
+            elif tool_name == "Assign Jira Issue":
+                result = assign_jira_issue(**args)
+            elif tool_name == "Retrieve Jira Users":
+                result = get_jira_users()
+            elif tool_name == "Update Jira Issue":
+                result = update_jira_issue(**args)
+            elif tool_name == "Retrieve Jira Comments":
+                result = get_jira_comments(**args)
+            elif tool_name == "Provide Jira Projects":
+                result = get_jira_projects()
+            else:
+                result = {
+                    "status": "error",
+                    "message": f"Unknown tool: {tool_name}"
+                }
+
+            return JSONResponse(content={
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": json.dumps(result, default=str)
+                        }
+                    ],
+                    "structuredContent": result
+                }
+            })
+#        elif method == "tools/call":
+            tool_name = params.get("name")
             args      = params.get("arguments", {})
 
             if tool_name == "Create Lead":
@@ -625,10 +686,10 @@ async def mcp_handler(request: Request):
             return JSONResponse(content={
                 "jsonrpc": "2.0",
                 "id": req_id,
-                "result": {"content": [{"type": "text", "text": json.dumps(result)}]}  # ← str() → json.dumps()
+                "result": result
             })
 
-        else:
+ #       else:
             return JSONResponse(content={
                 "jsonrpc": "2.0",
                 "id": req_id,
