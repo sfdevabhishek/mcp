@@ -3,8 +3,10 @@ import json
 import httpx
 import asyncio
 from enum import Enum
+import os
+from oauth import generate_token, validate_token
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
 from fastapi.responses import JSONResponse, Response
 from salesforce import create_lead, assign_permission_set, create_permission_set, create_case, update_jiraurl, get_salesforce_users, update_case_status
 from neuron7 import get_messages
@@ -13,6 +15,9 @@ from jira import create_jira_issue, update_jira_issue_status, get_jira_issue, ad
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+CLIENT_ID     = os.getenv("MCP_CLIENT_ID")
+CLIENT_SECRET = os.getenv("MCP_CLIENT_SECRET")
 
 async def keep_alive():
     while True:
@@ -48,10 +53,56 @@ async def mcp_head():
 async def mcp_get():
     return JSONResponse(content={"status": "mcp alive"}, headers={"Cache-Control": "no-store"})
 
+@app.post("/oauth/token")
+async def oauth_token(
+    grant_type:    str = Form(...),
+    client_id:     str = Form(...),
+    client_secret: str = Form(...)
+):
+    if grant_type != "client_credentials":
+        return JSONResponse(
+            status_code=400,
+            content={"error": "unsupported_grant_type", "error_description": "Only client_credentials grant type is supported."}
+        )
+    if client_id != CLIENT_ID or client_secret != CLIENT_SECRET:
+        return JSONResponse(
+            status_code=401,
+            content={"error": "invalid_client", "error_description": "Invalid client_id or client_secret."}
+        )
+    token_response = generate_token(client_id)
+    logger.info(f"✅ Token issued for client: {client_id}")
+    return JSONResponse(content=token_response)
+
 
 @app.post("/mcp")
 async def mcp_handler(request: Request):
     try:
+        # ── Token Validation ──────────────────────────────────────────────
+        auth_header = request.headers.get("Authorization", "")
+
+        if not auth_header.startswith("Bearer "):
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "error":             "unauthorized",
+                    "error_description": "Missing Bearer token."
+                },
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+
+        token = auth_header.replace("Bearer ", "").strip()
+
+        try:
+            validate_token(token)
+        except ValueError as e:
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "error":             "invalid_token",
+                    "error_description": str(e)
+                }
+            )
+        # ─────────────────────────────────────────────────────────────────
         body = await request.json()
         logger.info(f"Incoming MCP request: {body}")
 
@@ -639,61 +690,6 @@ async def mcp_handler(request: Request):
                     ],
                     "structuredContent": result
                 }
-            })
-#        elif method == "tools/call":
-            tool_name = params.get("name")
-            args      = params.get("arguments", {})
-
-            if tool_name == "Create Lead":
-                result = create_lead(**args)
-            elif tool_name == "Create Permission Set":
-                result = create_permission_set(**args)
-            elif tool_name == "Assign Permission Set":
-                result = assign_permission_set(**args)
-            elif tool_name == "Create Case":
-                result = create_case(**args)
-            elif tool_name == "Attach jira issue with case":
-                result = update_jiraurl(**args)
-            elif tool_name == "Provide Solutions":
-                result = get_messages(**args)
-            elif tool_name == "Create Jira Issue":
-                result = create_jira_issue(**args)
-            elif tool_name == "Get Salesforce Users":
-                result = get_salesforce_users()
-            elif tool_name == "Update Jira Issue Status":
-                result = update_jira_issue_status(**args)
-            elif tool_name == "Get Jira Issue Details":
-                result = get_jira_issue(**args)
-            elif tool_name == "Update Case Status":
-                result = update_case_status(**args)
-            elif tool_name == "Add Jira Comment":
-                result = add_jira_comment(**args)
-            elif tool_name == "Retrieve Jira Issues":
-                result = search_jira_issues(**args)
-            elif tool_name == "Assign Jira Issue":
-                result = assign_jira_issue(**args)
-            elif tool_name == "Retrieve Jira Users":
-                result = get_jira_users()
-            elif tool_name == "Update Jira Issue":
-                result = update_jira_issue(**args)
-            elif tool_name == "Retrieve Jira Comments":
-                result = get_jira_comments(**args)
-            elif tool_name == "Provide Jira Projects":
-                result = get_jira_projects()
-            else:
-                result = {"status": "error", "message": f"Unknown tool: {tool_name}"}
-
-            return JSONResponse(content={
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": result
-            })
-
- #       else:
-            return JSONResponse(content={
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "error": {"code": -32601, "message": f"Method not found: {method}"}
             })
 
     except Exception as e:
