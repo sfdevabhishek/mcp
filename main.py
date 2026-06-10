@@ -210,7 +210,7 @@ async def mcp_handler(request: Request):
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
-                                    "subject":     {"type": "string", "Label": "Subject" , "description": "Short summary of the issue"},
+                                    "subject":     {"type": "string", "title": "Subject" , "description": "Short summary of the issue"},
                                     "description": {"type": "string", "description": "Detailed description of the issue"},
                                     "priority": {
                                         "type": "string",
