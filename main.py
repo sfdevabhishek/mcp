@@ -210,14 +210,14 @@ async def mcp_handler(request: Request):
                             "inputSchema": {
                                 "type": "object",
                                 "properties": {
-                                    "hort summary of the issue":     {"type": "string", "title": "Subject" , "description": "Short summary of the issue"},
-                                    "description": {"type": "string", "description": "Detailed description of the issue"},
-                                    "priority": {
+                                    "Short summary of the issue":     {"type": "string", "title": "Subject" , "description": "Short summary of the issue"},
+                                    "Detailed description of the issue": {"type": "string", "description": "Detailed description of the issue"},
+                                    "Priority of the case": {
                                         "type": "string",
                                         "description": "Priority of the case",
                                         "enum": ["Low", "Medium", "High"]       
                                     },
-                                    "origin": {
+                                    "Origin of the case": {
                                         "type": "string",
                                         "description": "Origin of the case",
                                         "enum": ["Phone", "Email", "Web"]      
